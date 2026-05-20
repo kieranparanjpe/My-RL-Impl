@@ -1,7 +1,6 @@
 import torch
 import gymnasium as gym
-from mdp import Mdp
-
+from mdp_base import Mdp
 
 class MdpGym(Mdp):
 
@@ -11,7 +10,7 @@ class MdpGym(Mdp):
         self.env = gym.make(environment_id)
 
     @property
-    def state_dim(self) -> int:
+    def obs_dimension(self) -> int:
         return self.env.observation_space.shape[0]
     
     @property
@@ -26,8 +25,8 @@ class MdpGym(Mdp):
             return self.env.action_space.shape[0]
 
     def reset(self) -> torch.Tensor:
-        state, _ = self.env.reset()
-        return torch.tensor(state, dtype=torch.float32, device=self.device)
+        obs, _ = self.env.reset()
+        return torch.tensor(obs, dtype=torch.float32, device=self.device)
 
     def step(self, action: torch.Tensor) -> tuple[torch.Tensor, float, bool]:
         # 1. Convert PyTorch action back to NumPy/integer for Gymnasium to understand
@@ -37,13 +36,13 @@ class MdpGym(Mdp):
             raw_action = action.cpu().numpy()
 
         # 2. Run the actual physics step
-        next_state, reward, terminated, truncated, _ = self.env.step(raw_action)
+        next_obs, reward, terminated, truncated, _ = self.env.step(raw_action)
         
         # 3. Process the outputs into generic forms
         done = terminated or truncated
-        next_state_tensor = torch.tensor(next_state, dtype=torch.float32, device=self.device)
+        next_obs_tensor = torch.tensor(next_obs, dtype=torch.float32, device=self.device)
         
-        return next_state_tensor, float(reward), bool(done)
+        return next_obs_tensor, float(reward), bool(done)
         
     def close(self):
         self.env.close()

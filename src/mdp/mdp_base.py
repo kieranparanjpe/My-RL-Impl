@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List
 import torch
 
 class Mdp(ABC):
@@ -27,13 +26,13 @@ class Mdp(ABC):
 
     @abstractmethod
     def reset(self) -> torch.Tensor:
-        """Resets the MDP and returns the inital observation"""
+        """Resets the MDP and returns the initial observation"""
         pass
 
     @abstractmethod
     def step(self, action : torch.Tensor) -> tuple[torch.Tensor, float, bool]:
         """
-        Advances the MDP state by executing an action.
-        Returns: (next_state_tensor, reward_float, terminal_state)
+        Advances the MDP obs by executing an action.
+        Returns: (next_obs_tensor, reward_float, terminal_obs)
         """
         pass
