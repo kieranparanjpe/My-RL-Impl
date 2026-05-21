@@ -53,7 +53,7 @@ class ReplayBuffer(Dataset):
         self.advantages[idx] = advantage
 
     def insert_value_target(self, idx : int, value_target : torch.Tensor):
-        self.advantages[idx] = value_target
+        self.value_targets[idx] = value_target
 
     def reset(self):
         self.size = 0
