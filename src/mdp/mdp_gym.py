@@ -1,13 +1,13 @@
 import torch
 import gymnasium as gym
-from mdp_base import Mdp
+from .mdp_base import Mdp
 
 class MdpGym(Mdp):
 
-    def __init__(self, environment_id : str, device : torch.device = torch.device('cpu')):
+    def __init__(self, environment_id : str, device : torch.device = torch.device('cpu'), render_mode=None):
         super().__init__(device)
 
-        self.env = gym.make(environment_id)
+        self.env = gym.make(environment_id, render_mode=render_mode)
 
     @property
     def obs_dimension(self) -> int:
@@ -18,7 +18,7 @@ class MdpGym(Mdp):
         return isinstance(self.env.action_space, gym.spaces.Discrete)
 
     @property
-    def action_dim(self) -> int:
+    def action_dimension(self) -> int:
         if self.is_discrete:
             return self.env.action_space.n
         else:

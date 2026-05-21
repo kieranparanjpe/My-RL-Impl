@@ -14,7 +14,7 @@ class Mdp(ABC):
 
     @property
     @abstractmethod
-    def action_dim(self) -> int:
+    def action_dimension(self) -> int:
         """Returns the number of actions."""
         pass
 

@@ -2,19 +2,21 @@ from abc import ABC, abstractmethod
 
 import torch
 
-from mdp import Mdp
-from policy import Policy
+from .policies.policy import Policy
 
 class Algorithm(ABC):
 
-    def __init__(self, hyperparameters, policy : Policy, mdp : Mdp):
+    def __init__(self, hyperparameters, policy : Policy, obs_dimension : int, action_dimension : int,
+                 is_discrete : bool = False):
         super().__init__()
         self.hyperparameters = hyperparameters
         self.policy = policy
-        self.mdp = mdp
+        self.obs_dimension = obs_dimension
+        self.action_dimension = action_dimension
+        self.is_discrete = is_discrete
 
     @abstractmethod
-    def take_action(self, obs : torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def sample_action(self, obs : torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Take an action given a obs and return it. Should be called before stepping environment."""
         pass
 
