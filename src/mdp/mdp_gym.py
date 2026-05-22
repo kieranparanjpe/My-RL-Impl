@@ -14,12 +14,12 @@ class MdpGym(Mdp):
         return self.env.observation_space.shape[0]
     
     @property
-    def is_discrete(self) -> bool:
+    def discrete(self) -> bool:
         return isinstance(self.env.action_space, gym.spaces.Discrete)
 
     @property
     def action_dimension(self) -> int:
-        if self.is_discrete:
+        if self.discrete:
             return self.env.action_space.n
         else:
             return self.env.action_space.shape[0]
@@ -30,7 +30,7 @@ class MdpGym(Mdp):
 
     def step(self, action: torch.Tensor) -> tuple[torch.Tensor, float, bool]:
         # 1. Convert PyTorch action back to NumPy/integer for Gymnasium to understand
-        if self.is_discrete:
+        if self.discrete:
             raw_action = int(action.item())
         else:
             raw_action = action.cpu().numpy()

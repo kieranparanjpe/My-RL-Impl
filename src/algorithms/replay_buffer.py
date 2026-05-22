@@ -8,12 +8,12 @@ class ReplayBuffer(Dataset):
 
     def __init__(self, capacity : int, obs_size : int, action_size : int, 
                  device : torch.device = torch.device("cpu"),
-                 is_discrete : bool = False):
+                 discrete : bool = False):
         # Convert your data into PyTorch tensors if they aren't already
         self.observations = torch.empty((capacity, obs_size), dtype=torch.float32, device=device)
         self.next_observations = torch.empty((capacity, obs_size), dtype=torch.float32, device=device)
-        if is_discrete:
-            self.actions = torch.empty(capacity, dtype=torch.int64, device=device)
+        if discrete:
+            self.actions = torch.empty((capacity, action_size), dtype=torch.int64, device=device)
         else:
             self.actions = torch.empty((capacity, action_size), dtype=torch.float32, device=device)
 

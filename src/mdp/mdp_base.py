@@ -20,7 +20,7 @@ class Mdp(ABC):
 
     @property
     @abstractmethod
-    def is_discrete(self) -> bool:
+    def discrete(self) -> bool:
         """Returns whether the actions are continuous or discrete."""
         pass
 

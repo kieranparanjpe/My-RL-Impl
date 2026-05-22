@@ -10,14 +10,14 @@ from .policies.policy import Policy
 class Algorithm(ABC):
 
     def __init__(self, hyperparameters, policy : Policy, obs_dimension : int, action_dimension : int,
-                 is_discrete : bool = False, wandb_run : Optional[wandb.Run]=None,
+                 discrete : bool = False, wandb_run : Optional[wandb.Run]=None,
                  device : torch.device = torch.device('cpu')):
         super().__init__()
         self.hyperparameters = hyperparameters
         self.policy = policy
         self.obs_dimension = obs_dimension
         self.action_dimension = action_dimension
-        self.is_discrete = is_discrete
+        self.discrete = discrete
         self.wandb_run = wandb_run
         self.device = device
 
@@ -27,7 +27,7 @@ class Algorithm(ABC):
         pass
 
     @abstractmethod
-    def update_and_observe(self, initial_obs : torch.Tensor, next_obs : torch.Tensor, action : torch.Tensor, action_log_prob : float, reward : float, done : bool, timestep : int):
-        """Update and observe next steps based on environment's current obs after stepping. May include gradient updates, buffer updates, etc."""
+    def update_and_observe(self, initial_obs : torch.Tensor, next_obs : torch.Tensor, action : torch.Tensor, action_log_prob : float, reward : float, done : bool, timestep : int) -> bool:
+        """Update and observe next steps based on environment's current obs after stepping. May include gradient updates, buffer updates, etc. Returns True if a policy update occurred."""
         pass
 

@@ -27,8 +27,8 @@ class PPOHyperparams(Hyperparameters):
 
 class PPO(Algorithm):
     def __init__(self, hyperparameters : Hyperparameters, policy : Policy, obs_dimension : int, action_dimension :
-    int, is_discrete : bool = False, wandb_run : Optional[wandb.Run]=None, device : torch.device = torch.device('cpu')):
-        super().__init__(hyperparameters, policy, obs_dimension, action_dimension, is_discrete, wandb_run=wandb_run,
+    int, discrete : bool = False, wandb_run : Optional[wandb.Run]=None, device : torch.device = torch.device('cpu')):
+        super().__init__(hyperparameters, policy, obs_dimension, action_dimension, discrete, wandb_run=wandb_run,
                          device=device)
 
         self.logger = Logger(self.wandb_run, {
@@ -41,8 +41,8 @@ class PPO(Algorithm):
         self.value = ValueFunction(policy.input_size).to(self.device)
 
         self.replay_buffer = ReplayBuffer(self.hyperparameters.buffer_size, obs_dimension,
-                                          1 if is_discrete else action_dimension,
-                                          device=self.device, is_discrete=is_discrete)
+                                          1 if discrete else action_dimension,
+                                          device=self.device, discrete=discrete)
 
         self.policy_optimizer = torch.optim.Adam(self.policy.parameters(), lr=self.hyperparameters.lr, eps=1e-5)
         self.value_optimizer = torch.optim.Adam(self.value.parameters(), lr=self.hyperparameters.value_lr)
@@ -53,7 +53,7 @@ class PPO(Algorithm):
             action, log_probability, _ = self.policy.sample(obs)
         return action, log_probability
 
-    def update_and_observe(self, initial_obs, next_obs, action, action_log_prob : torch.Tensor, reward, done, timestep):
+    def update_and_observe(self, initial_obs, next_obs, action, action_log_prob : torch.Tensor, reward, done, timestep) -> bool:
         with torch.no_grad():
             reward = torch.tensor(reward, device=self.device, dtype=torch.float32)
             done = torch.tensor(done, device=self.device, dtype=torch.bool)
@@ -64,6 +64,8 @@ class PPO(Algorithm):
             self.gae_backwards()
             self.update_gradients(timestep)
             self.replay_buffer.reset()
+            return True
+        return False
 
     def td_error(self, initial_obs, next_obs, reward, terminal_mask):
         return reward + self.hyperparameters.gamma * terminal_mask * self.value(next_obs) - self.value(initial_obs)
@@ -75,6 +77,7 @@ class PPO(Algorithm):
             for k in range(self.replay_buffer.size-1, -1, -1):
                 obs, _, reward, _, next_obs, _, _, next_terminal = self.replay_buffer[k]
 
+                # the terminal mask is important so that we do not look past the episode boundary when doing gae
                 terminal_mask = ~next_terminal
 
                 td_error = self.td_error(obs, next_obs, reward, terminal_mask)
@@ -102,6 +105,7 @@ class PPO(Algorithm):
 
         value_criterion = torch.nn.MSELoss()
 
+
         for iteration in range(self.hyperparameters.gradient_epochs):
             for batch in dataloader:
                 obs, action, reward, old_policy_log_prob, next_obs, advantage, value_target, next_terminal = batch
@@ -118,20 +122,21 @@ class PPO(Algorithm):
 
                 self.policy_optimizer.step()
                 self.value_optimizer.step()
+                total_samples = len(dataloader) * self.hyperparameters.gradient_epochs * batch_length
 
                 with torch.no_grad():
                     entropy = distribution.entropy().sum()
                     batch_length = obs.size(0)
                     self.logger.add_log_data({
-                        "losses/policy_loss": policy_loss.item() * batch_length / len(dataloader),
-                        "losses/value_loss": value_loss.item() * batch_length/ len(dataloader),
-                        "losses/policy_entropy": entropy.item() / len(dataloader),
+                        "losses/policy_loss": policy_loss.item() * batch_length / total_samples,
+                        "losses/value_loss": value_loss.item() * batch_length/ total_samples,
+                        "losses/policy_entropy": entropy.item() / total_samples,
                     })
 
-            update_number = ((timestep // self.hyperparameters.buffer_size) - 1) * self.hyperparameters.gradient_epochs + iteration
+            # update_number = (timestep // self.hyperparameters.buffer_size) * self.hyperparameters.gradient_epochs + iteration
 
-            self.logger.set_log_data({'update_step': update_number})
-            self.logger.log_data()
-            self.logger.reset_fully()
+            # self.logger.set_log_data({'update_step': update_number})
+        self.logger.log_data()
+        self.logger.reset_fully()
 
 

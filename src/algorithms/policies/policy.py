@@ -12,26 +12,23 @@ class Policy(ABC, torch.nn.Module):
     def forward(self, observation : torch.Tensor) -> torch.distributions.Distribution:
         pass
 
+    def log_probability(self, action : torch.Tensor, distribution : torch.distributions.Distribution) -> torch.Tensor:
+        # we need to sum the log probabilities together because
+        # for an n dimensional action a with independent elements, p(a) = p(a1) * p(a2) * ... * p(an) => log(p(a)) =
+        # log(p(a1)) + ... + log(p(an))
+        return distribution.log_prob(action).sum(-1)
+
     def sample(self, obs : torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.distributions.Distribution]:
         """Run forward pass, sample the policy to get an action. Returns the action and its log probability"""
         distribution = self.forward(obs)
-        actions = distribution.sample()
-        log_probs = distribution.log_prob(actions).sum(-1) # we need to sum the log probabilities together because
-        # for an n dimensional action a with independent elements, p(a) = p(a1) * p(a2) * ... * p(an) => log(p(a)) =
-        # log(p(a1)) + ... + log(p(an))
+        action = distribution.sample()
+        log_probability = self.log_probability(action, distribution)
 
-        return actions, log_probs, distribution
+        return action, log_probability, distribution
 
     def log_probability_of_action(self, obs : torch.Tensor, action : torch.Tensor) -> tuple[torch.Tensor, torch.distributions.Distribution]:
         """Run forward pass, find log prob of the given action"""
         distribution = self.forward(obs)
-        log_probs = distribution.log_prob(action)
+        log_probability = self.log_probability(action, distribution)
 
-        if len(log_probs.shape) > 1:
-            log_probs = log_probs.sum(-1)
-
-        # we need to sum the log probabilities together because (only if more than 1 action)
-        # for an n dimensional action a with independent elements, p(a) = p(a1) * p(a2) * ... * p(an) => log(p(a)) =
-        # log(p(a1)) + ... + log(p(an))
-
-        return log_probs, distribution
+        return log_probability, distribution
