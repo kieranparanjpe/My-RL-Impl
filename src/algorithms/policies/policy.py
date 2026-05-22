@@ -25,7 +25,12 @@ class Policy(ABC, torch.nn.Module):
     def log_probability_of_action(self, obs : torch.Tensor, action : torch.Tensor) -> tuple[torch.Tensor, torch.distributions.Distribution]:
         """Run forward pass, find log prob of the given action"""
         distribution = self.forward(obs)
-        log_probs = distribution.log_prob(action).sum(-1)  # we need to sum the log probabilities together because
+        log_probs = distribution.log_prob(action)
+
+        if len(log_probs.shape) > 1:
+            log_probs = log_probs.sum(-1)
+
+        # we need to sum the log probabilities together because (only if more than 1 action)
         # for an n dimensional action a with independent elements, p(a) = p(a1) * p(a2) * ... * p(an) => log(p(a)) =
         # log(p(a1)) + ... + log(p(an))
 

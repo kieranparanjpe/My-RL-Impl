@@ -1,15 +1,12 @@
+from __future__ import annotations
 from copy import deepcopy
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
-import wandb
 
-from algorithms import Hyperparameters
-
+if TYPE_CHECKING:
+    import wandb
 
 class Logger:
-    episode_return: int = 0
-    episode_length: int = 0
-
     def __init__(self, run : Optional[wandb.Run], elements : Dict[str, Any]):
         self.elements_start = elements
         self.elements = deepcopy(self.elements_start)
@@ -30,5 +27,5 @@ class Logger:
             self.elements[k] += v
 
     def log_data(self):
-        if self.run:
-            self.run.log(self.elements)
+        if self.run is not None:
+            self.run.log(data=self.elements)

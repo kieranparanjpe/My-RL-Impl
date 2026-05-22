@@ -1,6 +1,8 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Optional
-import wandb
+from typing import Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    import wandb
 import torch
 
 from .policies.policy import Policy
@@ -8,7 +10,8 @@ from .policies.policy import Policy
 class Algorithm(ABC):
 
     def __init__(self, hyperparameters, policy : Policy, obs_dimension : int, action_dimension : int,
-                 is_discrete : bool = False, wandb_run : Optional[wandb.Run]=None):
+                 is_discrete : bool = False, wandb_run : Optional[wandb.Run]=None,
+                 device : torch.device = torch.device('cpu')):
         super().__init__()
         self.hyperparameters = hyperparameters
         self.policy = policy
@@ -16,6 +19,7 @@ class Algorithm(ABC):
         self.action_dimension = action_dimension
         self.is_discrete = is_discrete
         self.wandb_run = wandb_run
+        self.device = device
 
     @abstractmethod
     def sample_action(self, obs : torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:

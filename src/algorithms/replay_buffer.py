@@ -6,15 +6,22 @@ from torch.utils.data import Dataset
 
 class ReplayBuffer(Dataset):
 
-    def __init__(self, capacity : int, obs_size : int, action_size : int, device : torch.device = torch.device("cpu")):
+    def __init__(self, capacity : int, obs_size : int, action_size : int, 
+                 device : torch.device = torch.device("cpu"),
+                 is_discrete : bool = False):
         # Convert your data into PyTorch tensors if they aren't already
-        self.observations = torch.empty((capacity, obs_size), dtype=torch.float, device=device)
-        self.actions = torch.empty((capacity, action_size), dtype=torch.float, device=device)
-        self.rewards = torch.empty((capacity, 1), dtype=torch.float, device=device)
-        self.old_policy_log_probs = torch.empty((capacity, 1), dtype=torch.float, device=device)
-        self.td_errors = torch.empty((capacity, 1), dtype=torch.float, device=device)
-        self.advantages = torch.empty((capacity, 1), dtype=torch.float, device=device)
-        self.value_targets = torch.empty((capacity, 1), dtype=torch.float, device=device)
+        self.observations = torch.empty((capacity, obs_size), dtype=torch.float32, device=device)
+        self.next_observations = torch.empty((capacity, obs_size), dtype=torch.float32, device=device)
+        if is_discrete:
+            self.actions = torch.empty(capacity, dtype=torch.int64, device=device)
+        else:
+            self.actions = torch.empty((capacity, action_size), dtype=torch.float32, device=device)
+
+        self.rewards = torch.empty((capacity, 1), dtype=torch.float32, device=device)
+        self.old_policy_log_probs = torch.empty((capacity, 1), dtype=torch.float32, device=device)
+        self.advantages = torch.empty((capacity, 1), dtype=torch.float32, device=device)
+        self.value_targets = torch.empty((capacity, 1), dtype=torch.float32, device=device)
+        self.next_terminals = torch.empty((capacity, 1), dtype=torch.bool, device=device)
         self.device = device
 
 
@@ -27,16 +34,19 @@ class ReplayBuffer(Dataset):
     def __len__(self):
         return self.size
 
-    def __getitem__(self, idx) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,
+            torch.Tensor, torch.Tensor, torch.Tensor]:
         if not self.is_full():
             warnings.warn(f"Using unfinished replay buffer of size {self.size} < {self.capacity - 1}.")
 
-        return self.observations[idx], self.actions[idx], self.rewards[idx], self.old_policy_log_probs[idx], self.td_errors[idx], self.advantages[idx], self.value_targets[idx]
+        return (self.observations[idx], self.actions[idx], self.rewards[idx], self.old_policy_log_probs[idx],
+                self.next_observations[idx], self.advantages[idx], self.value_targets[idx], self.next_terminals[idx])
 
     def is_full(self):
         return self.size >= self.capacity
 
-    def append(self, observation : torch.Tensor, action : torch.Tensor, reward : torch.Tensor, old_policy_log_prob : torch.Tensor, td_error : torch.Tensor) -> bool:
+    def append(self, observation : torch.Tensor, action : torch.Tensor, reward : torch.Tensor, old_policy_log_prob :
+    torch.Tensor, next_observation : torch.Tensor, next_terminal : torch.Tensor) -> bool:
         """Appends to the ReplayBuffer. Returns false if the buffer is full."""
         if self.is_full():
             return False
@@ -44,7 +54,8 @@ class ReplayBuffer(Dataset):
         self.actions[self.size] = action
         self.rewards[self.size] = reward
         self.old_policy_log_probs[self.size] = old_policy_log_prob
-        self.td_errors[self.size] = td_error
+        self.next_observations[self.size] = next_observation
+        self.next_terminals[self.size] = next_terminal
         self.size += 1
 
         return True

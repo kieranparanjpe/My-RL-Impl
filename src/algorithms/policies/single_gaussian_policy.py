@@ -17,12 +17,12 @@ class SingleGaussianPolicy(Policy):
         x = self.fc1(observation)
         x = torch.nn.functional.relu(x)
 
-        x = self.fc2(observation)
+        x = self.fc2(x)
         x = torch.nn.functional.relu(x)
 
         x = self.fc3(x)
 
-        means = x[:, self.number_actions]
+        means = x[:, :self.number_actions]
         stds = torch.nn.functional.relu(x[:, self.number_actions:]) + 1e-6
 
         return torch.distributions.Normal(means, stds)
