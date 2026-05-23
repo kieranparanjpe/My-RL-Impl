@@ -122,11 +122,12 @@ class PPO(Algorithm):
 
                 self.policy_optimizer.step()
                 self.value_optimizer.step()
-                total_samples = len(dataloader) * self.hyperparameters.gradient_epochs * batch_length
 
                 with torch.no_grad():
                     entropy = distribution.entropy().sum()
                     batch_length = obs.size(0)
+                    total_samples = len(dataloader) * self.hyperparameters.gradient_epochs * batch_length
+
                     self.logger.add_log_data({
                         "losses/policy_loss": policy_loss.item() * batch_length / total_samples,
                         "losses/value_loss": value_loss.item() * batch_length/ total_samples,

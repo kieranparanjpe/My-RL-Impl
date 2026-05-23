@@ -5,8 +5,7 @@ from datetime import datetime
 
 from .logger import Logger
 from src.algorithms import Hyperparameters, PPO
-from src.algorithms.policies.categorical_policy import CategoricalPolicy
-from src.algorithms.policies.single_gaussian_policy import SingleGaussianPolicy
+from src.algorithms.policies import PolicyFactory
 from src.algorithms.ppo import PPOHyperparams
 from src.mdp.mdp_gym import MdpGym
 import os
@@ -46,10 +45,8 @@ class Trainer:
 
         self.mdp = MdpGym(environment_id, self.device, render_mode=None)
 
-        if policy_id == 'single_gaussian':
-            self.policy = SingleGaussianPolicy(self.mdp.obs_dimension, self.mdp.action_dimension).to(self.device)
-        elif policy_id == 'categorical':
-            self.policy = CategoricalPolicy(self.mdp.obs_dimension, self.mdp.action_dimension).to(self.device)
+        self.policy = PolicyFactory.build_policy(policy_id, self.mdp.obs_dimension, self.mdp.action_dimension).to(
+            self.device)
 
         if algorithm_id == 'ppo':
             self.algorithm = PPO(self.hyperparameters, self.policy, self.mdp.obs_dimension,
