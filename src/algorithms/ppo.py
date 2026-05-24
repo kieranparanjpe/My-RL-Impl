@@ -128,15 +128,13 @@ class PPO(Algorithm):
                     batch_length = obs.size(0)
                     total_samples = len(dataloader) * self.hyperparameters.gradient_epochs * batch_length
 
-                    self.logger.add_log_data({
+                    self.logger.sum_log_data({
                         "losses/policy_loss": policy_loss.item() * batch_length / total_samples,
                         "losses/value_loss": value_loss.item() * batch_length/ total_samples,
                         "losses/policy_entropy": entropy.item() / total_samples,
                     })
 
-            # update_number = (timestep // self.hyperparameters.buffer_size) * self.hyperparameters.gradient_epochs + iteration
-
-            # self.logger.set_log_data({'update_step': update_number})
+        self.logger.set_log_data({'global_step': timestep})
         self.logger.log_data()
         self.logger.reset_fully()
 

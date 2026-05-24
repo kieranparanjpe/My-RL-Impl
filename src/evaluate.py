@@ -1,13 +1,12 @@
 import torch
-from tqdm.auto import tqdm
-
-from algorithms.policies import PolicyFactory
-from mdp import MdpGym
+import argparse
+from src.algorithms.policies import PolicyFactory
+from src.mdp import MdpGym
 
 
 class Evaluator:
 
-    def __init__(self, environment_id, policy_id, policy_weights_path, n_timesteps):
+    def __init__(self, environment_id, policy_id, policy_weights_path):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.mdp = MdpGym(environment_id, self.device, render_mode='human')
@@ -16,9 +15,6 @@ class Evaluator:
 
         state_dict = torch.load(policy_weights_path, weights_only=True)
         self.policy.load_state_dict(state_dict)
-
-        self.n_timesteps = n_timesteps
-
 
     def evaluate(self):
         last_observation = self.mdp.reset()
@@ -33,6 +29,13 @@ class Evaluator:
                 last_observation = next_observation
 
 if __name__ == "__main__":
-    evaluator = Evaluator("CartPole-v1", "categorical",
-                          "saved_policies/CartPole-v1/CartPole-v1@2026-05-22-19-48-17/policy_2047.pth", 100000)
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--environment", "-e", help="Environment Id to run", default="CartPole-v1")
+    parser.add_argument("--policy", "-p", help="Policy Id to use", default="categorical")
+    parser.add_argument("--weights", "-w", help="Path to weights to load into policy")
+
+    args = parser.parse_args()
+
+    evaluator = Evaluator(args.environment, args.policy,args.weights)
     evaluator.evaluate()

@@ -22,7 +22,7 @@ class Logger:
     def set_log_data(self, kvps : Dict[str, Any]):
         self.elements.update(kvps)
 
-    def add_log_data(self, kvps : Dict[str, Any]):
+    def sum_log_data(self, kvps : Dict[str, Any]):
         for k, v in kvps.items():
             self.elements[k] += v
 

@@ -75,7 +75,7 @@ class Trainer:
             if updated_policy and self.save_policy:
                 self._save_policy(timestep)
 
-            self.logger.add_log_data({
+            self.logger.sum_log_data({
                 "charts/episodic_return": reward,
                 "charts/episode_length": 1,
             })
@@ -90,5 +90,5 @@ class Trainer:
                 last_observation = next_observation
 
 if __name__ == "__main__":
-    trainer = Trainer("CartPole-v1", "ppo", "categorical", PPOHyperparams(), logging=True, save_policy=True)
+    trainer = Trainer("LunarLander-v3", "ppo", "categorical", PPOHyperparams(), logging=True, save_policy=True)
     trainer.train()
