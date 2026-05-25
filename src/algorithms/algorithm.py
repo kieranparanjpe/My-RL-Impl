@@ -1,16 +1,16 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Optional, TYPE_CHECKING
-if TYPE_CHECKING:
-    import wandb
+from typing import Optional
+
 import torch
 
+from src.log import Logger
 from .policies.policy import Policy
 
 class Algorithm(ABC):
 
     def __init__(self, hyperparameters, policy : Policy, obs_dimension : int, action_dimension : int,
-                 discrete : bool = False, wandb_run : Optional[wandb.Run]=None,
+                 discrete : bool = False, logger : Optional[Logger]=None,
                  device : torch.device = torch.device('cpu')):
         super().__init__()
         self.hyperparameters = hyperparameters
@@ -18,7 +18,7 @@ class Algorithm(ABC):
         self.obs_dimension = obs_dimension
         self.action_dimension = action_dimension
         self.discrete = discrete
-        self.wandb_run = wandb_run
+        self.logger = logger
         self.device = device
 
     @abstractmethod

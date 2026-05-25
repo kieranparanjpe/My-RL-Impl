@@ -1,13 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 
 import torch
-if TYPE_CHECKING:
-    import wandb
 from torch.utils.data import DataLoader
 
-from src import Logger
+from src.log import Logger
 from .algorithm import Algorithm
 from .value_function import ValueFunction
 from .policies.policy import Policy
@@ -27,15 +25,14 @@ class PPOHyperparams(Hyperparameters):
 
 class PPO(Algorithm):
     def __init__(self, hyperparameters : Hyperparameters, policy : Policy, obs_dimension : int, action_dimension :
-    int, discrete : bool = False, wandb_run : Optional[wandb.Run]=None, device : torch.device = torch.device('cpu')):
-        super().__init__(hyperparameters, policy, obs_dimension, action_dimension, discrete, wandb_run=wandb_run,
+    int, discrete : bool = False, logger : Optional[Logger]=None, device : torch.device = torch.device('cpu')):
+        super().__init__(hyperparameters, policy, obs_dimension, action_dimension, discrete, logger=logger,
                          device=device)
 
-        self.logger = Logger(self.wandb_run, {
+        self.logger.add_elements({
             "losses/policy_loss": 0.0,
             "losses/value_loss": 0.0,
             "losses/policy_entropy": 0.0,
-            "global_step": 0
         })
 
         self.value = ValueFunction(policy.input_size).to(self.device)
@@ -136,6 +133,6 @@ class PPO(Algorithm):
 
         self.logger.set_log_data({'global_step': timestep})
         self.logger.log_data()
-        self.logger.reset_fully()
+        self.logger.reset("losses/policy_loss", "losses/value_loss", "losses/policy_entropy")
 
 

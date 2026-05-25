@@ -1,13 +1,27 @@
+from typing import cast
+
 import torch
 import gymnasium as gym
+
+from src.log import BaseRecorder, NullRecorder
 from .mdp_base import Mdp
 
 class MdpGym(Mdp):
 
-    def __init__(self, environment_id : str, device : torch.device = torch.device('cpu'), render_mode=None):
+    def __init__(self, environment_id : str, device : torch.device = torch.device('cpu'), render_mode=None,
+                 recorder : BaseRecorder = NullRecorder()):
         super().__init__(device)
 
-        self.env = gym.make(environment_id, render_mode=render_mode)
+        if recorder.enabled:
+            base_env = gym.make(environment_id, render_mode="rgb_array")
+            recorder = cast(BaseRecorder, cast(object, recorder))
+            self.env = gym.wrappers.RecordVideo(
+                base_env,
+                video_folder=recorder.path,
+                step_trigger=recorder.should_record
+            )
+        else:
+            self.env = gym.make(environment_id, render_mode=render_mode)
 
     @property
     def obs_dimension(self) -> int:

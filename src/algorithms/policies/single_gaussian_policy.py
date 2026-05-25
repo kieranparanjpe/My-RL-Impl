@@ -22,7 +22,7 @@ class SingleGaussianPolicy(Policy):
 
         x = self.fc3(x)
 
-        means = x[:, :self.number_actions]
-        stds = torch.nn.functional.relu(x[:, self.number_actions:]) + 1e-6
+        means, raw_stds = x.chunk(2, dim=-1)
+        stds = torch.nn.functional.relu(raw_stds) + 1e-6
 
         return torch.distributions.Normal(means, stds)
