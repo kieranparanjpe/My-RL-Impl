@@ -18,10 +18,13 @@ class Policy(ABC, torch.nn.Module):
         # log(p(a1)) + ... + log(p(an))
         return distribution.log_prob(action).sum(-1)
 
+    def _get_action(self, distribution : torch.distributions.Distribution) -> torch.Tensor:
+        return distribution.sample()
+
     def sample(self, obs : torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.distributions.Distribution]:
         """Run forward pass, sample the policy to get an action. Returns the action and its log probability"""
         distribution = self.forward(obs)
-        action = distribution.sample()
+        action = self._get_action(distribution)
         log_probability = self.log_probability(action, distribution)
 
         return action, log_probability, distribution

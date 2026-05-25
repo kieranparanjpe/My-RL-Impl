@@ -23,6 +23,6 @@ class SingleGaussianPolicy(Policy):
         x = self.fc3(x)
 
         means, raw_stds = x.chunk(2, dim=-1)
-        stds = torch.nn.functional.relu(raw_stds) + 1e-6
+        stds = torch.nn.functional.softplus(raw_stds)
 
         return torch.distributions.Normal(means, stds)
