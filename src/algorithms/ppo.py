@@ -75,7 +75,7 @@ class PPO(Algorithm):
 
                 next_advantage = advantage
 
-    def loss(self, new_policy_log_prob, old_policy_log_prob: torch.Tensor, advantage: torch.Tensor) -> torch.Tensor:
+    def loss(self, new_policy_log_prob, old_policy_log_prob: torch.Tensor, advantage: torch.Tensor, entropy : torch.Tensor) -> torch.Tensor:
         ratio = torch.exp(new_policy_log_prob - old_policy_log_prob)
         clipped = torch.min(
             ratio * advantage,
@@ -83,7 +83,8 @@ class PPO(Algorithm):
                         1 - self.hyperparameters.importance_ratio_clip,
                         1 + self.hyperparameters.importance_ratio_clip)
             * advantage)
-        return -torch.mean(clipped)
+        loss = -torch.mean(clipped) + self.hyperparameters.entropy_loss_weight * entropy
+        return loss
 
 
     def update_gradients(self, timestep : int):
@@ -99,8 +100,9 @@ class PPO(Algorithm):
                 self.value_optimizer.zero_grad()
 
                 new_policy_log_prob, distribution = self.policy.log_probability_of_action(obs, action)
+                entropy = distribution.entropy().sum()
 
-                policy_loss = self.loss(new_policy_log_prob, old_policy_log_prob, advantage)
+                policy_loss = self.loss(new_policy_log_prob, old_policy_log_prob, advantage, entropy)
                 value_loss = value_criterion(self.value(obs), value_target)
 
                 policy_loss.backward()
@@ -118,7 +120,6 @@ class PPO(Algorithm):
                         print("nan")
 
                 with torch.no_grad():
-                    entropy = distribution.entropy().sum()
                     batch_length = obs.size(0)
                     total_samples = len(dataloader) * self.hyperparameters.gradient_epochs * batch_length
 
