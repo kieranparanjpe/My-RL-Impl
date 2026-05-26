@@ -12,17 +12,6 @@ from .policies.policy import Policy
 from .hyperparameters import Hyperparameters
 from .replay_buffer import ReplayBuffer
 
-
-@dataclass
-class PPOHyperparams(Hyperparameters):
-    value_lr : float = 3e-4
-    gamma: float = 0.99
-    lamda: float = 0.95
-    importance_ratio_clip : float = 0.2
-    batch_size: int = 64
-    buffer_size: int = 2048
-    gradient_epochs : int = 10
-
 class PPO(Algorithm):
     def __init__(self, hyperparameters : Hyperparameters, policy : Policy, obs_dimension : int, action_dimension :
     int, discrete : bool = False, logger : Optional[Logger]=None, device : torch.device = torch.device('cpu')):
@@ -119,6 +108,14 @@ class PPO(Algorithm):
 
                 self.policy_optimizer.step()
                 self.value_optimizer.step()
+
+                for w in self.policy.parameters():
+                    if torch.isnan(w).any():
+                        print("nan")
+
+                for w in self.value.parameters():
+                    if torch.isnan(w).any():
+                        print("nan")
 
                 with torch.no_grad():
                     entropy = distribution.entropy().sum()

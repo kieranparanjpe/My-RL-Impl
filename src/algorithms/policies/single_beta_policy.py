@@ -28,6 +28,8 @@ class SingleBetaPolicy(Policy):
         raw_action = (action + 1) / 2
         log_prob = distribution.log_prob(raw_action).sum(-1)
         log_prob -= action.shape[-1] * torch.log(torch.tensor(2.0))
+        if log_prob.isinf().any():
+            print('poop')
         return log_prob
 
     def forward(self, observation : torch.Tensor) -> torch.distributions.Distribution:
@@ -40,7 +42,11 @@ class SingleBetaPolicy(Policy):
 
         x = self.fc3(x)
 
-        x = torch.nn.functional.softplus(x)
+        x = torch.nn.functional.softplus(x) + 1e-2 + 1
         alphas, betas = x.chunk(2, dim=-1)
 
-        return torch.distributions.Beta(alphas, betas)
+        try:
+            dist =  torch.distributions.Beta(alphas, betas)
+            return dist
+        except:
+            raise ValueError("poop")
