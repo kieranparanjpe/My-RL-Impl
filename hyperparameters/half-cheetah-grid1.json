@@ -9,5 +9,6 @@
   "importance_ratio_clip": [0.2],
   "batch_size": [64],
   "buffer_size": [2048],
-  "gradient_epochs": [10]
+  "gradient_epochs": [10],
+  "entropy_loss_weight": [0.1, 0.5]
 }

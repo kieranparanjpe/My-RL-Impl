@@ -60,6 +60,9 @@ class ReplayBuffer(Dataset):
 
         return True
 
+    def standardize_advantages(self):
+        self.advantages = (self.advantages - self.advantages.mean()) / (self.advantages.std() + 1e-8)
+
     def insert_advantage(self, idx : int, advantage : torch.Tensor):
         self.advantages[idx] = advantage
 

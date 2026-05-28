@@ -14,14 +14,12 @@ import os
 class Trainer:
 
     def __init__(self, environment_id, algorithm_id : str, policy_id : str, hyperparameters : Hyperparameters,
-                 logging=True, save_policy=False, record=False, index=0):
+                 logging=True, save_policy=False, record=False, index=0, now=datetime.now()):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.hyperparameters = hyperparameters
 
         self.environment_id = environment_id
-
-        now = datetime.now()
         self.run_name = f"{environment_id}@{now:%Y-%m-%d-%H-%M-%S}_RUN-{index}"
 
         print(f"\nTraining: {self.run_name} with algorithm: [{algorithm_id}] and policy: [{policy_id}]")
@@ -81,8 +79,8 @@ class Trainer:
             if done:
                 last_observation = self.mdp.reset()
 
-                self.logger.set_log_data({'global_step': timestep})
-                self.logger.log_data()
+                self.logger.set_log_data({"global_step": timestep})
+                self.logger.log_data("charts/episodic_return", "charts/episode_length", "global_step")
                 self.logger.reset("charts/episodic_return", "charts/episode_length")
 
                 self.recorder.new_episode = True
@@ -97,12 +95,12 @@ class Trainer:
         self.logger.finish()
 
 
-def run_one(args, hyperparameters, index):
+def run_one(args, hyperparameters, index, now):
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
 
     trainer = Trainer(args.environment, args.algorithm, args.policy, hyperparameters, logging=args.log,
-                      save_policy=args.save, record=args.record, index=index)
+                      save_policy=args.save, record=args.record, index=index, now=now)
     trainer.train()
     return True
 
@@ -122,7 +120,7 @@ def parse_args() :
 
     return parser.parse_args()
 
-def gridsearch(args, hyperparameters_grid):
+def gridsearch(args, hyperparameters_grid, now):
     max_parallel = min(os.cpu_count() or 1, 8)  # pick your cap
     hyperparam_index = 0
 
@@ -132,7 +130,7 @@ def gridsearch(args, hyperparameters_grid):
         # start initial batch
         for _ in range(min(max_parallel, len(hyperparameters_grid))):
             hp = hyperparameters_grid[hyperparam_index]
-            in_flight.add(pool.submit(run_one, args, hp, hyperparam_index))
+            in_flight.add(pool.submit(run_one, args, hp, hyperparam_index, now))
             hyperparam_index += 1
 
         # keep launching next combo when one finishes
@@ -143,19 +141,21 @@ def gridsearch(args, hyperparameters_grid):
                 fut.result()
                 if hyperparam_index < len(hyperparameters_grid):
                     hp = hyperparameters_grid[hyperparam_index]
-                    in_flight.add(pool.submit(run_one, args, hp, hyperparam_index))
+                    in_flight.add(pool.submit(run_one, args, hp, hyperparam_index, now))
                     hyperparam_index += 1
 
 def main():
     args = parse_args()
 
+    now = datetime.now()
+
     if args.grid is not None:
         hyperparameters_grid = HyperparameterLoader.load_grid(args.grid, args.algorithm)
-        gridsearch(args, hyperparameters_grid)
+        gridsearch(args, hyperparameters_grid, now)
     elif args.hyperparameters is not None:
-        run_one(args, HyperparameterLoader.load_single(args.hyperparameters, args.algorithm), 0)
+        run_one(args, HyperparameterLoader.load_single(args.hyperparameters, args.algorithm), 0, now)
     else:
-        run_one(args, PPOHyperparams(), 0)
+        run_one(args, PPOHyperparams(), 0, now)
 
 if __name__ == "__main__":
     main()

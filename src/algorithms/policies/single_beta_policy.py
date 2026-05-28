@@ -15,8 +15,8 @@ class SingleBetaPolicy(Policy):
         self.fc3 = torch.nn.Linear(64, number_actions * 2)
 
     @override
-    def _get_action(self, distribution : torch.distributions.Distribution) -> torch.Tensor:
-        raw_action = super()._get_action(distribution)
+    def sample_action(self, distribution : torch.distributions.Distribution) -> torch.Tensor:
+        raw_action = super().sample_action(distribution)
         # action currently bounded between [0, 1] -> we want to make it between [-1, 1]
         return raw_action * 2 - 1
 
@@ -25,11 +25,13 @@ class SingleBetaPolicy(Policy):
         # for an n dimensional action a with independent elements, p(a) = p(a1) * p(a2) * ... * p(an) => log(p(a)) =
         # log(p(a1)) + ... + log(p(an))
 
+        # then we also need to correct for the transformation of the random variable, following for u ~ p(u),
+        # a = f(u), p(a) = p(u) * |du/da|
+
         raw_action = (action + 1) / 2
-        log_prob = distribution.log_prob(raw_action).sum(-1)
-        log_prob -= action.shape[-1] * torch.log(torch.tensor(2.0))
-        if log_prob.isinf().any():
-            print('poop')
+        log_prob = distribution.log_prob(raw_action).sum(-1).unsqueeze(-1)
+        log_prob -= action.shape[-1] * torch.log(torch.tensor(2.0, device=action.device))
+
         return log_prob
 
     def forward(self, observation : torch.Tensor) -> torch.distributions.Distribution:
@@ -44,9 +46,5 @@ class SingleBetaPolicy(Policy):
 
         x = torch.nn.functional.softplus(x) + 1e-2 + 1
         alphas, betas = x.chunk(2, dim=-1)
-
-        try:
-            dist =  torch.distributions.Beta(alphas, betas)
-            return dist
-        except:
-            raise ValueError("poop")
+        dist = torch.distributions.Beta(alphas, betas)
+        return dist

@@ -12,6 +12,12 @@ class SingleGaussianPolicy(Policy):
         self.fc2 = torch.nn.Linear(64, 64)
         self.fc3 = torch.nn.Linear(64, number_actions * 2)
 
+    def log_probability(self, action : torch.Tensor, distribution : torch.distributions.Distribution) -> torch.Tensor:
+        # we need to sum the log probabilities together because
+        # for an n dimensional action a with independent elements, p(a) = p(a1) * p(a2) * ... * p(an) => log(p(a)) =
+        # log(p(a1)) + ... + log(p(an))
+        return distribution.log_prob(action).sum(-1).unsqueeze(-1)
+
     def forward(self, observation : torch.Tensor) -> torch.distributions.Distribution:
         """Converts from the observation to number_actions normal distributions to represent one per action dim."""
         x = self.fc1(observation)

@@ -31,3 +31,7 @@ class CategoricalPolicy(Policy):
         log_probabilities = distribution.log_prob(action.squeeze()).unsqueeze(-1)
         # the log probs returned will have shape [B], so we unsqueeze to make them [B, 1]
         return log_probabilities
+
+    @override
+    def entropy(self, distribution : torch.distributions.Distribution) -> torch.Tensor:
+        return distribution.entropy()

@@ -36,7 +36,9 @@ class PPO(Algorithm):
 
     def sample_action(self, obs):
         with torch.no_grad():
-            action, log_probability, _ = self.policy.sample(obs)
+            dist = self.policy.forward(obs)
+            action = self.policy.sample_action(dist)
+            log_probability = self.policy.log_probability(action, dist)
         return action, log_probability
 
     def update_and_observe(self, initial_obs, next_obs, action, action_log_prob : torch.Tensor, reward, done, timestep) -> bool:
@@ -48,6 +50,7 @@ class PPO(Algorithm):
 
         if self.replay_buffer.is_full():
             self.gae_backwards()
+            self.replay_buffer.standardize_advantages()
             self.update_gradients(timestep)
             self.replay_buffer.reset()
             return True
@@ -83,8 +86,8 @@ class PPO(Algorithm):
                         1 - self.hyperparameters.importance_ratio_clip,
                         1 + self.hyperparameters.importance_ratio_clip)
             * advantage)
-        loss = -torch.mean(clipped) + self.hyperparameters.entropy_loss_weight * entropy
-        return loss
+        objective = clipped.mean() + self.hyperparameters.entropy_loss_weight * entropy.mean()
+        return -objective
 
 
     def update_gradients(self, timestep : int):
@@ -92,15 +95,15 @@ class PPO(Algorithm):
 
         value_criterion = torch.nn.MSELoss()
 
-
         for iteration in range(self.hyperparameters.gradient_epochs):
             for batch in dataloader:
                 obs, action, reward, old_policy_log_prob, next_obs, advantage, value_target, next_terminal = batch
                 self.policy_optimizer.zero_grad()
                 self.value_optimizer.zero_grad()
 
-                new_policy_log_prob, distribution = self.policy.log_probability_of_action(obs, action)
-                entropy = distribution.entropy().sum()
+                policy_distribution = self.policy.forward(obs)
+                new_policy_log_prob = self.policy.log_probability(action, policy_distribution)
+                entropy = self.policy.entropy(policy_distribution)
 
                 policy_loss = self.loss(new_policy_log_prob, old_policy_log_prob, advantage, entropy)
                 value_loss = value_criterion(self.value(obs), value_target)
@@ -111,14 +114,6 @@ class PPO(Algorithm):
                 self.policy_optimizer.step()
                 self.value_optimizer.step()
 
-                for w in self.policy.parameters():
-                    if torch.isnan(w).any():
-                        print("nan")
-
-                for w in self.value.parameters():
-                    if torch.isnan(w).any():
-                        print("nan")
-
                 with torch.no_grad():
                     batch_length = obs.size(0)
                     total_samples = len(dataloader) * self.hyperparameters.gradient_epochs * batch_length
@@ -126,11 +121,11 @@ class PPO(Algorithm):
                     self.logger.sum_log_data({
                         "losses/policy_loss": policy_loss.item() * batch_length / total_samples,
                         "losses/value_loss": value_loss.item() * batch_length/ total_samples,
-                        "losses/policy_entropy": entropy.item() / total_samples,
+                        "losses/policy_entropy": entropy.sum().item() / total_samples,
                     })
 
-        self.logger.set_log_data({'global_step': timestep})
-        self.logger.log_data()
+        self.logger.set_log_data({"global_step": timestep})
+        self.logger.log_data("losses/policy_loss", "losses/value_loss", "losses/policy_entropy", "global_step")
         self.logger.reset("losses/policy_loss", "losses/value_loss", "losses/policy_entropy")
 
 
