@@ -18,17 +18,17 @@ class Recorder(BaseRecorder):
     def __init__(self, path: str, number_videos: int, total_timesteps: int):
         super().__init__()
         self.path = path
-        self.number_videos = number_videos
-        self.recorded_videos = 0
-        self.total_timesteps = total_timesteps
+        self._number_videos = number_videos
+        self._recorded_videos = 0
+        self._total_timesteps = total_timesteps
         self.enabled = True
 
 
     def should_record(self, step_id):
-        threshold = self.recorded_videos * (self.total_timesteps // (self.number_videos - 1)) - 5000
+        threshold = self._recorded_videos * (self._total_timesteps // (self._number_videos - 1)) - 5000
 
         if step_id > threshold and self.new_episode:
-            self.recorded_videos += 1
+            self._recorded_videos += 1
             return True
         return False
 

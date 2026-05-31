@@ -46,7 +46,7 @@ class Logger(ABC):
 class WandBLogger(Logger):
     def __init__(self, run_info : RunInfo, hyperparameters: Dict[str, Any], elements: Dict[str, Any]):
         super().__init__()
-        self.run = self.wandb_run = wandb.init(
+        self._run = self._wandb_run = wandb.init(
             entity="kieranparanjpe-mcgill-university",
             project="RL_Project1",
             name=run_info.run_name(),
@@ -56,13 +56,13 @@ class WandBLogger(Logger):
             group=run_info.group()
         )
 
-        self.elements_start = elements
-        self.elements = deepcopy(self.elements_start)
+        self._elements_start = elements
+        self._elements = deepcopy(self._elements_start)
 
-        self.run.define_metric("*", step_metric="global_step")
+        self._run.define_metric("*", step_metric="global_step")
 
     def finish(self):
-        self.run.finish()
+        self._run.finish()
 
     def upload_videos(self, recorder : BaseRecorder):
         if not recorder.enabled:
@@ -72,36 +72,36 @@ class WandBLogger(Logger):
         for video in videos:
             step = int(video.split('-step-')[-1].split(".mp4")[0])
 
-            self.run.log({
+            self._run.log({
                 "video/recording": wandb.Video(video, fps=30, format="mp4"),
                 "global_step": step
             })
 
 
     def add_elements(self, elements : Dict[str, Any]):
-        self.elements.update(deepcopy(elements))
-        self.elements_start.update(elements)
+        self._elements.update(deepcopy(elements))
+        self._elements_start.update(elements)
 
     def reset(self, *fields : str):
         if fields is None or len(fields) == 0:
-            self.elements = deepcopy(self.elements_start)
+            self._elements = deepcopy(self._elements_start)
         else:
             for field in fields:
-                self.elements[field] = self.elements_start[field]
+                self._elements[field] = self._elements_start[field]
 
     def set_log_data(self, kvps : Dict[str, Any]):
-        self.elements.update(kvps)
+        self._elements.update(kvps)
 
     def sum_log_data(self, kvps : Dict[str, Any]):
         for k, v in kvps.items():
-            self.elements[k] += v
+            self._elements[k] += v
 
     def log_data(self, *fields):
         if fields is None or len(fields) == 0:
-            self.run.log(data=self.elements)
+            self._run.log(data=self._elements)
         else:
-            data = {k : v for k, v in self.elements.items() if k in fields}
-            self.run.log(data=data)
+            data = {k : v for k, v in self._elements.items() if k in fields}
+            self._run.log(data=data)
 
 class NullLogger(Logger):
 

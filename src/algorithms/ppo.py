@@ -24,14 +24,14 @@ class PPO(Algorithm):
             "losses/policy_entropy": 0.0,
         })
 
-        self.value = ValueFunction(policy.input_size).to(self.device)
+        self._value = ValueFunction(policy.input_size).to(self.device)
 
-        self.replay_buffer = ReplayBuffer(self.hyperparameters.buffer_size, obs_dimension,
-                                          1 if discrete else action_dimension,
-                                          device=self.device, discrete=discrete)
+        self._replay_buffer = ReplayBuffer(self.hyperparameters.buffer_size, obs_dimension,
+                                           1 if discrete else action_dimension,
+                                           device=self.device, discrete=discrete)
 
-        self.policy_optimizer = torch.optim.Adam(self.policy.parameters(), lr=self.hyperparameters.lr, eps=1e-5)
-        self.value_optimizer = torch.optim.Adam(self.value.parameters(), lr=self.hyperparameters.value_lr)
+        self._policy_optimizer = torch.optim.Adam(self.policy.parameters(), lr=self.hyperparameters.lr, eps=1e-5)
+        self._value_optimizer = torch.optim.Adam(self._value.parameters(), lr=self.hyperparameters.value_lr)
 
 
     def sample_action(self, obs):
@@ -46,35 +46,35 @@ class PPO(Algorithm):
             reward = torch.tensor(reward, device=self.device, dtype=torch.float32)
             done = torch.tensor(done, device=self.device, dtype=torch.bool)
 
-        self.replay_buffer.append(initial_obs, action, reward, action_log_prob, next_obs, done)
+        self._replay_buffer.append(initial_obs, action, reward, action_log_prob, next_obs, done)
 
-        if self.replay_buffer.is_full():
+        if self._replay_buffer.is_full():
             self._gae_backwards()
-            self.replay_buffer.standardize_advantages()
+            self._replay_buffer.standardize_advantages()
             self._update_gradients(timestep)
-            self.replay_buffer.reset()
+            self._replay_buffer.reset()
             return True
         return False
 
     def _td_error(self, initial_obs, next_obs, reward, terminal_mask):
-        return reward + self.hyperparameters.gamma * terminal_mask * self.value(next_obs) - self.value(initial_obs)
+        return reward + self.hyperparameters.gamma * terminal_mask * self._value(next_obs) - self._value(initial_obs)
 
     def _gae_backwards(self):
         """Populate the advantages and value targets in the replay buffer backwards."""
         with torch.no_grad():
             next_advantage = 0
-            for k in range(self.replay_buffer.size-1, -1, -1):
-                obs, _, reward, _, next_obs, _, _, next_terminal = self.replay_buffer[k]
+            for k in range(self._replay_buffer.size-1, -1, -1):
+                obs, _, reward, _, next_obs, _, _, next_terminal = self._replay_buffer[k]
 
                 # the terminal mask is important so that we do not look past the episode boundary when doing gae
                 terminal_mask = ~next_terminal
 
                 td_error = self._td_error(obs, next_obs, reward, terminal_mask)
                 advantage = (self.hyperparameters.gamma * self.hyperparameters.lamda * terminal_mask *next_advantage) + td_error
-                self.replay_buffer.insert_advantage(k, advantage)
+                self._replay_buffer.insert_advantage(k, advantage)
 
-                value_target = advantage + self.value(obs)
-                self.replay_buffer.insert_value_target(k, value_target)
+                value_target = advantage + self._value(obs)
+                self._replay_buffer.insert_value_target(k, value_target)
 
                 next_advantage = advantage
 
@@ -91,28 +91,28 @@ class PPO(Algorithm):
 
 
     def _update_gradients(self, timestep : int):
-        dataloader = DataLoader(self.replay_buffer, batch_size=self.hyperparameters.batch_size, shuffle=True)
+        dataloader = DataLoader(self._replay_buffer, batch_size=self.hyperparameters.batch_size, shuffle=True)
 
         value_criterion = torch.nn.MSELoss()
 
         for iteration in range(self.hyperparameters.gradient_epochs):
             for batch in dataloader:
                 obs, action, reward, old_policy_log_prob, next_obs, advantage, value_target, next_terminal = batch
-                self.policy_optimizer.zero_grad()
-                self.value_optimizer.zero_grad()
+                self._policy_optimizer.zero_grad()
+                self._value_optimizer.zero_grad()
 
                 policy_distribution = self.policy.forward(obs)
                 new_policy_log_prob = self.policy.log_probability(action, policy_distribution)
                 entropy = self.policy.entropy(policy_distribution)
 
                 policy_loss = self._loss(new_policy_log_prob, old_policy_log_prob, advantage, entropy)
-                value_loss = value_criterion(self.value(obs), value_target)
+                value_loss = value_criterion(self._value(obs), value_target)
 
                 policy_loss.backward()
                 value_loss.backward()
 
-                self.policy_optimizer.step()
-                self.value_optimizer.step()
+                self._policy_optimizer.step()
+                self._value_optimizer.step()
 
                 with torch.no_grad():
                     batch_length = obs.size(0)

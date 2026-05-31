@@ -12,9 +12,9 @@ class Evaluator:
     def __init__(self, environment_id, policy_id, policy_weights_path):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.mdp = MdpGym(environment_id, self.device, render_mode='human')
+        self._mdp = MdpGym(environment_id, self.device, render_mode='human')
 
-        self.policy = PolicyFactory.build_policy(policy_id, self.mdp.obs_dimension, self.mdp.action_dimension).to(self.device)
+        self.policy = PolicyFactory.build_policy(policy_id, self._mdp.obs_dimension, self._mdp.action_dimension).to(self.device)
 
         state_dict = torch.load(policy_weights_path, weights_only=True)
         self.policy.load_state_dict(state_dict)
@@ -33,20 +33,20 @@ class Evaluator:
         print("Type 'x' or 'close' + Enter to stop.")
         threading.Thread(target=self._listen_for_commands, daemon=True).start()
 
-        last_observation = self.mdp.reset()
+        last_observation = self._mdp.reset()
 
         while not self._stop.is_set(): # should write graceful closing for this
             distribution = self.policy.forward(last_observation)
             action = self.policy.sample_action(distribution)
 
-            next_observation, reward, done = self.mdp.step(action)
+            next_observation, reward, done = self._mdp.step(action)
 
             if done:
-                last_observation = self.mdp.reset()
+                last_observation = self._mdp.reset()
             else:
                 last_observation = next_observation
 
-        self.mdp.close()
+        self._mdp.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

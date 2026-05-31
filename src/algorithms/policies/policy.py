@@ -6,7 +6,7 @@ class Policy(ABC, torch.nn.Module):
     def __init__(self, input_size : int, number_actions : int):
         super().__init__()
         self.input_size = input_size
-        self.number_actions = number_actions
+        self._number_actions = number_actions
 
     @abstractmethod
     def forward(self, observation : torch.Tensor) -> torch.distributions.Distribution:

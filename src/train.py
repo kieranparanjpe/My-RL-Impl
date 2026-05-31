@@ -44,40 +44,40 @@ class Trainer:
 
         self.hyperparameters = hyperparameters
 
-        self.run_info = run_info
+        self._run_info = run_info
 
-        print(f"\nTraining: {self.run_info.run_name()} with algorithm: [{self.run_info.algorithm_id}] and policy: "
-              f"[{self.run_info.policy_id}]")
+        print(f"\nTraining: {self._run_info.run_name()} with algorithm: [{self._run_info.algorithm_id}] and policy: "
+              f"[{self._run_info.policy_id}]")
         print(f"Using hyperparameters: {self.hyperparameters.__repr__()}")
 
 
-        self.logger = WandBLogger(self.run_info, hyperparameters.__dict__, {
+        self._logger = WandBLogger(self._run_info, hyperparameters.__dict__, {
             "charts/episodic_return": 0.0,
             "charts/episode_length": 0,
             "global_step": 0,
         }) if logging else NullLogger()
 
-        self.save_policy = save_policy
-        if self.save_policy:
+        self._should_save_policy = save_policy
+        if self._should_save_policy:
             self._create_policy_folder()
 
-        self.recorder = Recorder(self.run_info.local_folder_path("saved_videos"),
+        self._recorder = Recorder(self._run_info.local_folder_path("saved_videos"),
 5, self.hyperparameters.n_timesteps) if record else NullRecorder()
 
-        self.mdp = MdpGym(self.run_info.environment_id, self.device, render_mode=None, recorder=self.recorder)
+        self._mdp = MdpGym(self._run_info.environment_id, self.device, render_mode=None, recorder=self._recorder)
 
-        self.policy = PolicyFactory.build_policy(self.run_info.policy_id, self.mdp.obs_dimension,
-                                                 self.mdp.action_dimension).to(
+        self.policy = PolicyFactory.build_policy(self._run_info.policy_id, self._mdp.obs_dimension,
+                                                 self._mdp.action_dimension).to(
             self.device)
 
-        if self.run_info.algorithm_id == 'ppo':
-            self.algorithm = PPO(self.hyperparameters, self.policy, self.mdp.obs_dimension,
-                                 self.mdp.action_dimension, self.mdp.discrete,
-                                 logger=self.logger, device=self.device)
+        if self._run_info.algorithm_id == 'ppo':
+            self.algorithm = PPO(self.hyperparameters, self.policy, self._mdp.obs_dimension,
+                                 self._mdp.action_dimension, self._mdp.discrete,
+                                 logger=self._logger, device=self.device)
 
 
     def _create_policy_folder(self):
-        directory_path = self.run_info.local_folder_path("saved_policies")
+        directory_path = self._run_info.local_folder_path("saved_policies")
 
         os.makedirs(directory_path, exist_ok=True)
         return directory_path
@@ -86,43 +86,43 @@ class Trainer:
         width = len(str(self.hyperparameters.n_timesteps))
         torch.save(
             self.policy.state_dict(),
-            f'{self.run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth'
+            f'{self._run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth'
         )
 
     def train(self):
-        last_observation = self.mdp.reset()
+        last_observation = self._mdp.reset()
         for timestep in tqdm(range(self.hyperparameters.n_timesteps)):
             action, log_prob_action = self.algorithm.sample_action(last_observation)
 
-            next_observation, reward, done = self.mdp.step(action)
+            next_observation, reward, done = self._mdp.step(action)
 
             updated_policy = self.algorithm.update_and_observe(last_observation, next_observation, action, log_prob_action, reward,
                                               done, timestep)
 
-            if updated_policy and self.save_policy:
+            if updated_policy and self._should_save_policy:
                 self._save_policy(timestep)
 
-            self.logger.sum_log_data({
+            self._logger.sum_log_data({
                 "charts/episodic_return": reward,
                 "charts/episode_length": 1,
             })
             if done:
-                last_observation = self.mdp.reset()
+                last_observation = self._mdp.reset()
 
-                self.logger.set_log_data({"global_step": timestep})
-                self.logger.log_data("charts/episodic_return", "charts/episode_length", "global_step")
-                self.logger.reset("charts/episodic_return", "charts/episode_length")
+                self._logger.set_log_data({"global_step": timestep})
+                self._logger.log_data("charts/episodic_return", "charts/episode_length", "global_step")
+                self._logger.reset("charts/episodic_return", "charts/episode_length")
 
-                self.recorder.new_episode = True
+                self._recorder.new_episode = True
 
             else:
                 last_observation = next_observation
 
-                self.recorder.new_episode = False
+                self._recorder.new_episode = False
 
-        self.mdp.close()
-        self.logger.upload_videos(self.recorder)
-        self.logger.finish()
+        self._mdp.close()
+        self._logger.upload_videos(self._recorder)
+        self._logger.finish()
 
 
 def run_one(args, hyperparameters, index, now):

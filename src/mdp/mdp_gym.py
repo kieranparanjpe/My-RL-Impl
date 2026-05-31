@@ -15,31 +15,31 @@ class MdpGym(Mdp):
         if recorder.enabled:
             base_env = gym.make(environment_id, render_mode="rgb_array")
             recorder = cast(BaseRecorder, cast(object, recorder))
-            self.env = gym.wrappers.RecordVideo(
+            self._env = gym.wrappers.RecordVideo(
                 base_env,
                 video_folder=recorder.path,
                 step_trigger=recorder.should_record
             )
         else:
-            self.env = gym.make(environment_id, render_mode=render_mode)
+            self._env = gym.make(environment_id, render_mode=render_mode)
 
     @property
     def obs_dimension(self) -> int:
-        return self.env.observation_space.shape[0]
+        return self._env.observation_space.shape[0]
     
     @property
     def discrete(self) -> bool:
-        return isinstance(self.env.action_space, gym.spaces.Discrete)
+        return isinstance(self._env.action_space, gym.spaces.Discrete)
 
     @property
     def action_dimension(self) -> int:
         if self.discrete:
-            return self.env.action_space.n
+            return self._env.action_space.n
         else:
-            return self.env.action_space.shape[0]
+            return self._env.action_space.shape[0]
 
     def reset(self) -> torch.Tensor:
-        obs, _ = self.env.reset()
+        obs, _ = self._env.reset()
         return torch.tensor(obs, dtype=torch.float32, device=self.device)
 
     def step(self, action: torch.Tensor) -> tuple[torch.Tensor, float, bool]:
@@ -50,7 +50,7 @@ class MdpGym(Mdp):
             raw_action = action.cpu().numpy()
 
         # 2. Run the actual physics step
-        next_obs, reward, terminated, truncated, _ = self.env.step(raw_action)
+        next_obs, reward, terminated, truncated, _ = self._env.step(raw_action)
         
         # 3. Process the outputs into generic forms
         done = terminated or truncated
@@ -59,5 +59,5 @@ class MdpGym(Mdp):
         return next_obs_tensor, float(reward), bool(done)
 
     def close(self):
-        self.env.close()
+        self._env.close()
 

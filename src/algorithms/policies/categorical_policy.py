@@ -9,19 +9,19 @@ class CategoricalPolicy(Policy):
     def __init__(self, input_size : int, number_actions : int):
         super().__init__(input_size, number_actions)
 
-        self.fc1 = torch.nn.Linear(input_size, 64)
-        self.fc2 = torch.nn.Linear(64, 64)
-        self.fc3 = torch.nn.Linear(64, number_actions)
+        self._fc1 = torch.nn.Linear(input_size, 64)
+        self._fc2 = torch.nn.Linear(64, 64)
+        self._fc3 = torch.nn.Linear(64, number_actions)
 
     def forward(self, observation : torch.Tensor) -> torch.distributions.Distribution:
         """Converts from the observation to categorical distribution over discrete actions."""
-        x = self.fc1(observation)
+        x = self._fc1(observation)
         x = torch.nn.functional.relu(x)
 
-        x = self.fc2(x)
+        x = self._fc2(x)
         x = torch.nn.functional.relu(x)
 
-        x = self.fc3(x)
+        x = self._fc3(x)
 
         return torch.distributions.Categorical(logits=x)
 
