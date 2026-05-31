@@ -58,7 +58,6 @@ class MdpGym(Mdp):
         
         return next_obs_tensor, float(reward), bool(done)
 
-        
     def close(self):
         self.env.close()
 

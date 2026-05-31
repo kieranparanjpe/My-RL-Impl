@@ -59,7 +59,7 @@ class Trainer:
 
         self.save_policy = save_policy
         if self.save_policy:
-            self.create_policy_folder()
+            self._create_policy_folder()
 
         self.recorder = Recorder(self.run_info.local_folder_path("saved_videos"),
 5, self.hyperparameters.n_timesteps) if record else NullRecorder()
@@ -76,7 +76,7 @@ class Trainer:
                                  logger=self.logger, device=self.device)
 
 
-    def create_policy_folder(self):
+    def _create_policy_folder(self):
         directory_path = self.run_info.local_folder_path("saved_policies")
 
         os.makedirs(directory_path, exist_ok=True)

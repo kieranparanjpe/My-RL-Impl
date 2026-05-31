@@ -36,3 +36,10 @@ class Mdp(ABC):
         Returns: (next_obs_tensor, reward_float, terminal_obs)
         """
         pass
+
+    @abstractmethod
+    def close(self):
+        """
+        Closes the mdp environment.
+        """
+        pass

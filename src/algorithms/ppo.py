@@ -49,17 +49,17 @@ class PPO(Algorithm):
         self.replay_buffer.append(initial_obs, action, reward, action_log_prob, next_obs, done)
 
         if self.replay_buffer.is_full():
-            self.gae_backwards()
+            self._gae_backwards()
             self.replay_buffer.standardize_advantages()
-            self.update_gradients(timestep)
+            self._update_gradients(timestep)
             self.replay_buffer.reset()
             return True
         return False
 
-    def td_error(self, initial_obs, next_obs, reward, terminal_mask):
+    def _td_error(self, initial_obs, next_obs, reward, terminal_mask):
         return reward + self.hyperparameters.gamma * terminal_mask * self.value(next_obs) - self.value(initial_obs)
 
-    def gae_backwards(self):
+    def _gae_backwards(self):
         """Populate the advantages and value targets in the replay buffer backwards."""
         with torch.no_grad():
             next_advantage = 0
@@ -69,7 +69,7 @@ class PPO(Algorithm):
                 # the terminal mask is important so that we do not look past the episode boundary when doing gae
                 terminal_mask = ~next_terminal
 
-                td_error = self.td_error(obs, next_obs, reward, terminal_mask)
+                td_error = self._td_error(obs, next_obs, reward, terminal_mask)
                 advantage = (self.hyperparameters.gamma * self.hyperparameters.lamda * terminal_mask *next_advantage) + td_error
                 self.replay_buffer.insert_advantage(k, advantage)
 
@@ -78,7 +78,7 @@ class PPO(Algorithm):
 
                 next_advantage = advantage
 
-    def loss(self, new_policy_log_prob, old_policy_log_prob: torch.Tensor, advantage: torch.Tensor, entropy : torch.Tensor) -> torch.Tensor:
+    def _loss(self, new_policy_log_prob, old_policy_log_prob: torch.Tensor, advantage: torch.Tensor, entropy : torch.Tensor) -> torch.Tensor:
         ratio = torch.exp(new_policy_log_prob - old_policy_log_prob)
         clipped = torch.min(
             ratio * advantage,
@@ -90,7 +90,7 @@ class PPO(Algorithm):
         return -objective
 
 
-    def update_gradients(self, timestep : int):
+    def _update_gradients(self, timestep : int):
         dataloader = DataLoader(self.replay_buffer, batch_size=self.hyperparameters.batch_size, shuffle=True)
 
         value_criterion = torch.nn.MSELoss()
@@ -105,7 +105,7 @@ class PPO(Algorithm):
                 new_policy_log_prob = self.policy.log_probability(action, policy_distribution)
                 entropy = self.policy.entropy(policy_distribution)
 
-                policy_loss = self.loss(new_policy_log_prob, old_policy_log_prob, advantage, entropy)
+                policy_loss = self._loss(new_policy_log_prob, old_policy_log_prob, advantage, entropy)
                 value_loss = value_criterion(self.value(obs), value_target)
 
                 policy_loss.backward()
