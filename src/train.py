@@ -1,4 +1,6 @@
 import argparse
+from dataclasses import dataclass
+
 import torch
 from tqdm.auto import tqdm
 from datetime import datetime
@@ -10,23 +12,46 @@ from src.mdp.mdp_gym import MdpGym
 from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED
 import os
 
+@dataclass
+class RunInfo:
+    environment_id : str
+    algorithm_id : str
+    policy_id : str
+    grid_index : int | None
+    time : datetime
+
+    def _env_and_time(self):
+        return f"{self.environment_id}@{self.time:%Y-%m-%d-%H-%M-%S}"
+
+    def group(self):
+        return None if self.grid_index is None else self._env_and_time()
+
+    def run_name(self) -> str:
+        return self._env_and_time() if self.grid_index is None else f"{self._env_and_time()}_RUN-{self.grid_index}"
+
+    def local_folder_path(self, folder_name):
+        if self.grid_index is None:
+            return f"{folder_name}/{self.environment_id}/{self.run_name()}"
+        else:
+            return f"{folder_name}/{self.environment_id}/{self.group()}/{self.run_name()}"
+
 
 class Trainer:
 
-    def __init__(self, environment_id, algorithm_id : str, policy_id : str, hyperparameters : Hyperparameters,
-                 logging=True, save_policy=False, record=False, index=0, now=datetime.now()):
+    def __init__(self, run_info : RunInfo, hyperparameters : Hyperparameters,
+                 logging=True, save_policy=False, record=False):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.hyperparameters = hyperparameters
 
-        self.environment_id = environment_id
-        self.run_name = f"{environment_id}@{now:%Y-%m-%d-%H-%M-%S}_RUN-{index}"
+        self.run_info = run_info
 
-        print(f"\nTraining: {self.run_name} with algorithm: [{algorithm_id}] and policy: [{policy_id}]")
+        print(f"\nTraining: {self.run_info.run_name()} with algorithm: [{self.run_info.algorithm_id}] and policy: "
+              f"[{self.run_info.policy_id}]")
         print(f"Using hyperparameters: {self.hyperparameters.__repr__()}")
 
 
-        self.logger = WandBLogger(self.run_name, environment_id, algorithm_id, policy_id, hyperparameters.__dict__, {
+        self.logger = WandBLogger(self.run_info, hyperparameters.__dict__, {
             "charts/episodic_return": 0.0,
             "charts/episode_length": 0,
             "global_step": 0,
@@ -34,30 +59,35 @@ class Trainer:
 
         self.save_policy = save_policy
         if self.save_policy:
-            self.save_policy_folder = self.create_policy_folder()
+            self.create_policy_folder()
 
-        self.recorder = Recorder(f"saved_videos/{self.environment_id}/{self.run_name}",
+        self.recorder = Recorder(self.run_info.local_folder_path("saved_videos"),
 5, self.hyperparameters.n_timesteps) if record else NullRecorder()
 
-        self.mdp = MdpGym(environment_id, self.device, render_mode=None, recorder=self.recorder)
+        self.mdp = MdpGym(self.run_info.environment_id, self.device, render_mode=None, recorder=self.recorder)
 
-        self.policy = PolicyFactory.build_policy(policy_id, self.mdp.obs_dimension, self.mdp.action_dimension).to(
+        self.policy = PolicyFactory.build_policy(self.run_info.policy_id, self.mdp.obs_dimension,
+                                                 self.mdp.action_dimension).to(
             self.device)
 
-        if algorithm_id == 'ppo':
+        if self.run_info.algorithm_id == 'ppo':
             self.algorithm = PPO(self.hyperparameters, self.policy, self.mdp.obs_dimension,
                                  self.mdp.action_dimension, self.mdp.discrete,
                                  logger=self.logger, device=self.device)
 
 
     def create_policy_folder(self):
-        directory_path = f"saved_policies/{self.environment_id}/{self.run_name}"
+        directory_path = self.run_info.local_folder_path("saved_policies")
 
         os.makedirs(directory_path, exist_ok=True)
         return directory_path
 
     def _save_policy(self, timestep):
-        torch.save(self.policy.state_dict(), f'{self.save_policy_folder}/policy_{timestep}.pth')
+        width = len(str(self.hyperparameters.n_timesteps))
+        torch.save(
+            self.policy.state_dict(),
+            f'{self.run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth'
+        )
 
     def train(self):
         last_observation = self.mdp.reset()
@@ -99,8 +129,16 @@ def run_one(args, hyperparameters, index, now):
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
 
-    trainer = Trainer(args.environment, args.algorithm, args.policy, hyperparameters, logging=args.log,
-                      save_policy=args.save, record=args.record, index=index, now=now)
+    run_info = RunInfo(
+        environment_id=args.environment,
+        algorithm_id=args.algorithm,
+        policy_id=args.policy,
+        grid_index=index,
+        time=now
+    )
+
+    trainer = Trainer(run_info, hyperparameters, logging=args.log,
+                      save_policy=args.save, record=args.record)
     trainer.train()
     return True
 
@@ -153,9 +191,9 @@ def main():
         hyperparameters_grid = HyperparameterLoader.load_grid(args.grid, args.algorithm)
         gridsearch(args, hyperparameters_grid, now)
     elif args.hyperparameters is not None:
-        run_one(args, HyperparameterLoader.load_single(args.hyperparameters, args.algorithm), 0, now)
+        run_one(args, HyperparameterLoader.load_single(args.hyperparameters, args.algorithm), None, now)
     else:
-        run_one(args, PPOHyperparams(), 0, now)
+        run_one(args, PPOHyperparams(), None, now)
 
 if __name__ == "__main__":
     main()

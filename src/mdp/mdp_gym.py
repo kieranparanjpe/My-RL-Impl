@@ -57,6 +57,7 @@ class MdpGym(Mdp):
         next_obs_tensor = torch.tensor(next_obs, dtype=torch.float32, device=self.device)
         
         return next_obs_tensor, float(reward), bool(done)
+
         
     def close(self):
         self.env.close()

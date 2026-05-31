@@ -18,7 +18,7 @@ class PPOHyperparams(Hyperparameters):
     batch_size: int = 64
     buffer_size: int = 2048
     gradient_epochs: int = 10
-    entropy_loss_weight: float = 0.1
+    entropy_loss_weight: float = 0.0
 
 
 class HyperparameterLoader:

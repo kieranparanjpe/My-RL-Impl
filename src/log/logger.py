@@ -3,7 +3,10 @@ from __future__ import annotations
 import os
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Dict
+from typing import Any, Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from train import RunInfo
 from .recorder import BaseRecorder, Recorder
 
 import wandb
@@ -41,16 +44,16 @@ class Logger(ABC):
         pass
 
 class WandBLogger(Logger):
-    def __init__(self, run_name : str, environment_id: str, algorithm_id: str, policy_id: str,
-                 hyperparameters: Dict[str, Any], elements: Dict[str, Any]):
+    def __init__(self, run_info : RunInfo, hyperparameters: Dict[str, Any], elements: Dict[str, Any]):
         super().__init__()
         self.run = self.wandb_run = wandb.init(
             entity="kieranparanjpe-mcgill-university",
             project="RL_Project1",
-            name=run_name,
-            tags=[f"{algorithm_id}", f"{policy_id}", f"{environment_id}"],
+            name=run_info.run_name(),
+            tags=[f"{run_info.algorithm_id}", f"{run_info.policy_id}", f"{run_info.environment_id}"],
             job_type="train",
             config=hyperparameters,
+            group=run_info.group()
         )
 
         self.elements_start = elements

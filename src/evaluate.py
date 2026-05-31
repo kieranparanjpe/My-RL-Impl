@@ -18,8 +18,10 @@ class Evaluator:
 
     def evaluate(self):
         last_observation = self.mdp.reset()
-        while True:
-            action, _, _ = self.policy.sample(last_observation)
+
+        while True: # should write graceful closing for this
+            distribution = self.policy.forward(last_observation)
+            action = self.policy.sample_action(distribution)
 
             next_observation, reward, done = self.mdp.step(action)
 
@@ -27,6 +29,8 @@ class Evaluator:
                 last_observation = self.mdp.reset()
             else:
                 last_observation = next_observation
+
+        self.mdp.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
