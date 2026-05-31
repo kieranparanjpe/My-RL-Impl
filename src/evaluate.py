@@ -1,3 +1,6 @@
+import queue
+import threading
+
 import torch
 import argparse
 from src.algorithms.policies import PolicyFactory
@@ -16,10 +19,23 @@ class Evaluator:
         state_dict = torch.load(policy_weights_path, weights_only=True)
         self.policy.load_state_dict(state_dict)
 
+        self._stop = threading.Event()
+
+    def _listen_for_commands(self):
+        commands = queue.Queue()
+        while not self._stop.is_set():
+            cmd = input().strip().lower()
+            commands.put(cmd)
+            if cmd in {"x", "close", "quit", "exit"}:
+                self._stop.set()
+
     def evaluate(self):
+        print("Type 'x' or 'close' + Enter to stop.")
+        threading.Thread(target=self._listen_for_commands, daemon=True).start()
+
         last_observation = self.mdp.reset()
 
-        while True: # should write graceful closing for this
+        while not self._stop.is_set(): # should write graceful closing for this
             distribution = self.policy.forward(last_observation)
             action = self.policy.sample_action(distribution)
 
