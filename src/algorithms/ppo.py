@@ -79,14 +79,21 @@ class PPO(Algorithm):
                 next_advantage = advantage
 
     def _loss(self, new_policy_log_prob, old_policy_log_prob: torch.Tensor, advantage: torch.Tensor, entropy : torch.Tensor) -> torch.Tensor:
-        ratio = torch.exp(new_policy_log_prob - old_policy_log_prob)
+        new_policy_log_prob = torch.clip(new_policy_log_prob, -40.0, 40.0) # clip for safety
+        old_policy_log_prob = torch.clip(old_policy_log_prob, -40.0, 40.0) # clip for safety
+
+        log_ratio = (new_policy_log_prob - old_policy_log_prob).clip(-10.0, 10.0) # clip for safety.
+        ratio = torch.exp(log_ratio)
         clipped = torch.min(
             ratio * advantage,
             torch.clamp(ratio,
                         1 - self.hyperparameters.importance_ratio_clip,
                         1 + self.hyperparameters.importance_ratio_clip)
             * advantage)
-        objective = clipped.mean() + self.hyperparameters.entropy_loss_weight * entropy.mean()
+
+        objective = clipped.mean()
+        if self.hyperparameters.entropy_loss_weight != 0.0:
+            objective += self.hyperparameters.entropy_loss_weight * entropy.mean()
         return -objective
 
 
@@ -110,6 +117,9 @@ class PPO(Algorithm):
 
                 policy_loss.backward()
                 value_loss.backward()
+
+                torch.nn.utils.clip_grad_norm_(self.policy.parameters(), 0.5, error_if_nonfinite=True)
+                torch.nn.utils.clip_grad_norm_(self._value.parameters(), 0.5, error_if_nonfinite=True)
 
                 self._policy_optimizer.step()
                 self._value_optimizer.step()

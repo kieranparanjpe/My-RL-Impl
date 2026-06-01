@@ -28,8 +28,8 @@ class SingleBetaPolicy(Policy):
         # then we also need to correct for the transformation of the random variable, following for u ~ p(u),
         # a = f(u), p(a) = p(u) * |du/da|
 
-        raw_action = (action + 1) / 2
-        log_prob = distribution.log_prob(raw_action).sum(-1).unsqueeze(-1)
+        raw_action = ((action + 1) / 2).clamp(1e-6, 1 - 1e-6) # clamp for stability
+        log_prob = distribution.log_prob(raw_action).sum(-1, keepdim=True)
         log_prob -= action.shape[-1] * torch.log(torch.tensor(2.0, device=action.device))
 
         return log_prob
@@ -44,7 +44,10 @@ class SingleBetaPolicy(Policy):
 
         x = self._fc3(x)
 
+        # keep between 1.02 and 500.0
         x = torch.nn.functional.softplus(x) + 1e-2 + 1
+        x = x.clamp(max=500.0)
+
         alphas, betas = x.chunk(2, dim=-1)
         dist = torch.distributions.Beta(alphas, betas)
         return dist
