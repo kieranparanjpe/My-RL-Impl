@@ -8,5 +8,5 @@
   "batch_size": 64,
   "buffer_size": 2048,
   "gradient_epochs": 10,
-  "entropy_loss_weight" : 0
+  "entropy_loss_weight" : 0.0001
 }

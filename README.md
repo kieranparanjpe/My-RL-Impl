@@ -12,11 +12,11 @@ This project contains 4 key sections: the training loop, the MDP, the algorithms
 decoupled such that we can use the same training loop to train on different tasks with different algorithms, 
 making it easy to iterate and learn. 
 
-A more detailed report of my implementation of PPO and various policies, can be found [here]().
+A more detailed report of my implementation and results, can be found [here]().
 
 ### MDP support
 
-Right now there is MDP support for gymnasium tasks. I've tried training policies on CartPole-v1, LunarLander-v3 and 
+Right now there is MDP support for [gymnasium](https://gymnasium.farama.org/index.html) tasks. I've tried training policies on CartPole-v1, LunarLander-v3 and 
 HalfCheetah-v5. Note that these are a variety of continous/discrete action and observation spaces.
 
 ### Algorithms
