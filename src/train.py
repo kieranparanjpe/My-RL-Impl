@@ -91,6 +91,7 @@ class Trainer:
 
     def train(self):
         last_observation = self._mdp.reset()
+        episode_number = 0
         for timestep in tqdm(range(self.hyperparameters.n_timesteps)):
             action, log_prob_action = self.algorithm.sample_action(last_observation)
 
@@ -99,7 +100,8 @@ class Trainer:
             updated_policy = self.algorithm.update_and_observe(last_observation, next_observation, action, log_prob_action, reward,
                                               done, timestep)
 
-            if updated_policy and self._should_save_policy:
+            if ((updated_policy and self._should_save_policy and episode_number % 50000 == 0) or
+                    timestep == self.hyperparameters.n_timesteps - 1):
                 self._save_policy(timestep)
 
             self._logger.sum_log_data({
@@ -114,6 +116,7 @@ class Trainer:
                 self._logger.reset("charts/episodic_return", "charts/episode_length")
 
                 self._recorder.new_episode = True
+                episode_number += 1
 
             else:
                 last_observation = next_observation
