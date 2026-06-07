@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import List
+
 from pydantic import TypeAdapter
 import json
 from itertools import product
@@ -43,12 +45,12 @@ class HyperparameterLoader:
         return [cls._parse_single(h, default_type) for h in hyperparameter_grid]
 
     @classmethod
-    def load_single(cls, path : str, default_type : str):
+    def load_single(cls, path : str, default_type : str) -> Hyperparameters:
         data = cls._load_data(path)
         return cls._parse_single(data, default_type)
 
     @classmethod
-    def load_grid(cls, path : str, default_type : str):
+    def load_grid(cls, path : str, default_type : str) -> List[Hyperparameters]:
         data = cls._load_data(path)
         return cls._parse_grid(data, default_type)
 

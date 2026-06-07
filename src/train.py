@@ -100,7 +100,7 @@ class Trainer:
             updated_policy = self.algorithm.update_and_observe(last_observation, next_observation, action, log_prob_action, reward,
                                               termination_state, timestep)
 
-            if ((updated_policy and self._should_save_policy and episode_number % 50000 == 0) or
+            if ((updated_policy and self._should_save_policy and episode_number % 500 == 0) or
                     timestep == self.hyperparameters.n_timesteps - 1):
                 self._save_policy(timestep)
 

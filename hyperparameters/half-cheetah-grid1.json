@@ -1,13 +1,13 @@
 {
 
-  "n_timesteps": [4000000],
-  "lr": [0.00015, 0.0003],
+  "n_timesteps": [5000000],
+  "lr": [0.0003],
   "value_lr": [0.0003],
   "gamma": [0.99],
   "lamda": [0.95],
   "importance_ratio_clip": [0.2],
-  "batch_size": [64],
+  "batch_size": [256, 512],
   "buffer_size": [2048],
   "gradient_epochs": [10],
-  "entropy_loss_weight": [0.015, 0.01, 0.009, 0.008]
+  "entropy_loss_weight": [0]
 }
