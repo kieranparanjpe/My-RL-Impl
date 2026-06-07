@@ -1,7 +1,7 @@
 {
 
-  "n_timesteps": [2000000],
-  "lr": [0.0003],
+  "n_timesteps": [4000000],
+  "lr": [0.00015, 0.0003],
   "value_lr": [0.0003],
   "gamma": [0.99],
   "lamda": [0.95],
@@ -9,5 +9,5 @@
   "batch_size": [64],
   "buffer_size": [2048],
   "gradient_epochs": [10],
-  "entropy_loss_weight": [0.1, 0.01, 0.001]
+  "entropy_loss_weight": [0.015, 0.01, 0.009, 0.008]
 }

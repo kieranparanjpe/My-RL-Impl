@@ -8,7 +8,7 @@ from datetime import datetime
 from src.log import WandBLogger, NullLogger, NullRecorder, Recorder
 from src.algorithms import Hyperparameters, PPOHyperparams, PPO, HyperparameterLoader
 from src.algorithms.policies import PolicyFactory
-from src.mdp.mdp_gym import MdpGym
+from src.mdp import MdpGym, MdpTerminationState
 from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED
 import os
 
@@ -95,10 +95,10 @@ class Trainer:
         for timestep in tqdm(range(self.hyperparameters.n_timesteps)):
             action, log_prob_action = self.algorithm.sample_action(last_observation)
 
-            next_observation, reward, done = self._mdp.step(action)
+            next_observation, reward, termination_state = self._mdp.step(action)
 
             updated_policy = self.algorithm.update_and_observe(last_observation, next_observation, action, log_prob_action, reward,
-                                              done, timestep)
+                                              termination_state, timestep)
 
             if ((updated_policy and self._should_save_policy and episode_number % 50000 == 0) or
                     timestep == self.hyperparameters.n_timesteps - 1):
@@ -108,7 +108,7 @@ class Trainer:
                 "charts/episodic_return": reward,
                 "charts/episode_length": 1,
             })
-            if done:
+            if termination_state is not MdpTerminationState.IN_PROGRESS:
                 last_observation = self._mdp.reset()
 
                 self._logger.set_log_data({"global_step": timestep})

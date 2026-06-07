@@ -5,6 +5,8 @@ import gymnasium as gym
 
 from src.log import BaseRecorder, NullRecorder
 from .mdp_base import Mdp
+from .mdp_termination_state import MdpTerminationState
+
 
 class MdpGym(Mdp):
 
@@ -42,21 +44,19 @@ class MdpGym(Mdp):
         obs, _ = self._env.reset()
         return torch.tensor(obs, dtype=torch.float32, device=self.device)
 
-    def step(self, action: torch.Tensor) -> tuple[torch.Tensor, float, bool]:
-        # 1. Convert PyTorch action back to NumPy/integer for Gymnasium to understand
+    def step(self, action: torch.Tensor) -> tuple[torch.Tensor, float, MdpTerminationState]:
         if self.discrete:
             raw_action = int(action.item())
         else:
             raw_action = action.cpu().numpy()
 
-        # 2. Run the actual physics step
         next_obs, reward, terminated, truncated, _ = self._env.step(raw_action)
         
-        # 3. Process the outputs into generic forms
-        done = terminated or truncated
+        terminal_state = MdpTerminationState.TERMINATED if terminated else (MdpTerminationState.TRUNCATED if truncated
+                                                                            else MdpTerminationState.IN_PROGRESS)
         next_obs_tensor = torch.tensor(next_obs, dtype=torch.float32, device=self.device)
-        
-        return next_obs_tensor, float(reward), bool(done)
+
+        return next_obs_tensor, float(reward), terminal_state
 
     def close(self):
         self._env.close()

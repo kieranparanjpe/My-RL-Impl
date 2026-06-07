@@ -1,10 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass
 from typing import Optional
 
 import torch
 from torch.utils.data import DataLoader
 
+from src.mdp import MdpTerminationState
 from src.log import Logger
 from .algorithm import Algorithm
 from .value_function import ValueFunction
@@ -41,12 +41,13 @@ class PPO(Algorithm):
             log_probability = self.policy.log_probability(action, dist)
         return action, log_probability
 
-    def update_and_observe(self, initial_obs, next_obs, action, action_log_prob : torch.Tensor, reward, done, timestep) -> bool:
+    def update_and_observe(self, initial_obs, next_obs, action, action_log_prob : torch.Tensor,
+           reward : float, termination_state : MdpTerminationState, timestep : int) -> bool:
         with torch.no_grad():
             reward = torch.tensor(reward, device=self.device, dtype=torch.float32)
-            done = torch.tensor(done, device=self.device, dtype=torch.bool)
+            termination_state = torch.tensor(termination_state.value, device=self.device, dtype=torch.int32)
 
-        self._replay_buffer.append(initial_obs, action, reward, action_log_prob, next_obs, done)
+        self._replay_buffer.append(initial_obs, action, reward, action_log_prob, next_obs, termination_state)
 
         if self._replay_buffer.is_full():
             self._gae_backwards()
@@ -66,11 +67,13 @@ class PPO(Algorithm):
             for k in range(self._replay_buffer.size-1, -1, -1):
                 obs, _, reward, _, next_obs, _, _, next_terminal = self._replay_buffer[k]
 
-                # the terminal mask is important so that we do not look past the episode boundary when doing gae
-                terminal_mask = ~next_terminal
+                # the terminal mask is to ensure we only bootstrap for truncated and done states.
+                # the done mask is important so that we do not look past the episode boundary when doing gae
+                terminal_mask = next_terminal != MdpTerminationState.TERMINATED.value
+                done_mask = next_terminal == MdpTerminationState.IN_PROGRESS.value
 
                 td_error = self._td_error(obs, next_obs, reward, terminal_mask)
-                advantage = (self.hyperparameters.gamma * self.hyperparameters.lamda * terminal_mask *next_advantage) + td_error
+                advantage = (self.hyperparameters.gamma * self.hyperparameters.lamda * done_mask *next_advantage) + td_error
                 self._replay_buffer.insert_advantage(k, advantage)
 
                 value_target = advantage + self._value(obs)

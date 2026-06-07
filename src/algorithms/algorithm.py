@@ -4,6 +4,7 @@ from typing import Optional
 
 import torch
 
+from src.mdp import MdpTerminationState
 from src.log import Logger
 from .policies.policy import Policy
 
@@ -27,7 +28,8 @@ class Algorithm(ABC):
         pass
 
     @abstractmethod
-    def update_and_observe(self, initial_obs : torch.Tensor, next_obs : torch.Tensor, action : torch.Tensor, action_log_prob : float, reward : float, done : bool, timestep : int) -> bool:
+    def update_and_observe(self, initial_obs : torch.Tensor, next_obs : torch.Tensor, action : torch.Tensor,
+           action_log_prob : float, reward : float, termination_state : MdpTerminationState, timestep : int) -> bool:
         """Update and observe next steps based on environment's current obs after stepping. May include gradient updates, buffer updates, etc. Returns True if a policy update occurred."""
         pass
 

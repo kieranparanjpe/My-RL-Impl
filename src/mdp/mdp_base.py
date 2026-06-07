@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 import torch
 
+from .mdp_termination_state import MdpTerminationState
+
+
 class Mdp(ABC):
 
     def __init__(self, device):
@@ -30,7 +33,7 @@ class Mdp(ABC):
         pass
 
     @abstractmethod
-    def step(self, action : torch.Tensor) -> tuple[torch.Tensor, float, bool]:
+    def step(self, action : torch.Tensor) -> tuple[torch.Tensor, float, MdpTerminationState]:
         """
         Advances the MDP obs by executing an action.
         Returns: (next_obs_tensor, reward_float, terminal_obs)

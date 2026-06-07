@@ -21,7 +21,7 @@ class ReplayBuffer(Dataset):
         self._old_policy_log_probs = torch.empty((capacity, 1), dtype=torch.float32, device=device)
         self._advantages = torch.empty((capacity, 1), dtype=torch.float32, device=device)
         self._value_targets = torch.empty((capacity, 1), dtype=torch.float32, device=device)
-        self._next_terminals = torch.empty((capacity, 1), dtype=torch.bool, device=device)
+        self._next_terminals = torch.empty((capacity, 1), dtype=torch.int32, device=device)
         self.device = device
 
 
@@ -46,7 +46,7 @@ class ReplayBuffer(Dataset):
         return self.size >= self._capacity
 
     def append(self, observation : torch.Tensor, action : torch.Tensor, reward : torch.Tensor, old_policy_log_prob :
-    torch.Tensor, next_observation : torch.Tensor, next_terminal : torch.Tensor) -> bool:
+    torch.Tensor, next_observation : torch.Tensor, next_termination_state : torch.Tensor) -> bool:
         """Appends to the ReplayBuffer. Returns false if the buffer is full."""
         if self.is_full():
             return False
@@ -55,7 +55,7 @@ class ReplayBuffer(Dataset):
         self._rewards[self.size] = reward
         self._old_policy_log_probs[self.size] = old_policy_log_prob
         self._next_observations[self.size] = next_observation
-        self._next_terminals[self.size] = next_terminal
+        self._next_terminals[self.size] = next_termination_state
         self.size += 1
 
         return True
