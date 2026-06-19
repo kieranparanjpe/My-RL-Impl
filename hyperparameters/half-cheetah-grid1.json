@@ -6,8 +6,8 @@
   "gamma": [0.99],
   "lamda": [0.95],
   "importance_ratio_clip": [0.2],
-  "batch_size": [256, 512],
+  "batch_size": [512],
   "buffer_size": [2048],
   "gradient_epochs": [10],
-  "entropy_loss_weight": [0]
+  "entropy_loss_weight": [0.0, 0.005]
 }

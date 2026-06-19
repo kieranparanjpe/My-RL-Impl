@@ -64,7 +64,8 @@ class Trainer:
         self._recorder = Recorder(self._run_info.local_folder_path("saved_videos"),
 5, self.hyperparameters.n_timesteps) if record else NullRecorder()
 
-        self._mdp = MdpGym(self._run_info.environment_id, self.device, render_mode=None, recorder=self._recorder)
+        self._mdp = MdpGym(self._run_info.environment_id, self.device, render_mode=None, recorder=self._recorder,
+                           normalise_obs=True, normalise_reward=True)
 
         self.policy = PolicyFactory.build_policy(self._run_info.policy_id, self._mdp.obs_dimension,
                                                  self._mdp.action_dimension).to(
@@ -84,10 +85,11 @@ class Trainer:
 
     def _save_policy(self, timestep):
         width = len(str(self.hyperparameters.n_timesteps))
-        torch.save(
-            self.policy.state_dict(),
-            f'{self._run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth'
-        )
+        save_dict = {"policy": self.policy.state_dict()}
+        if (stats := self._mdp.obs_rms_stats) is not None:
+            save_dict["obs_mean"] = torch.tensor(stats[0])
+            save_dict["obs_var"] = torch.tensor(stats[1])
+        torch.save(save_dict, f'{self._run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth')
 
     def train(self):
         last_observation = self._mdp.reset()

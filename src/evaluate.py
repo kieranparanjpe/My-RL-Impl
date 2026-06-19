@@ -3,8 +3,9 @@ import threading
 
 import torch
 import argparse
+
 from src.algorithms.policies import PolicyFactory
-from src.mdp import MdpGym
+from src.mdp import MdpGym, MdpTerminationState
 
 
 class Evaluator:
@@ -12,12 +13,23 @@ class Evaluator:
     def __init__(self, environment_id, policy_id, policy_weights_path):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self._mdp = MdpGym(environment_id, self.device, render_mode='human')
+        checkpoint = torch.load(policy_weights_path, weights_only=True)
+        if isinstance(checkpoint, dict) and "policy" in checkpoint:
+            policy_state_dict = checkpoint["policy"]
+            obs_rms_stats = (
+                checkpoint["obs_mean"].numpy(),
+                checkpoint["obs_var"].numpy(),
+            ) if "obs_mean" in checkpoint else None
+        else:
+            policy_state_dict = checkpoint
+            obs_rms_stats = None
+
+        self._mdp = MdpGym(environment_id, self.device, render_mode='human',
+                           normalise_obs=(obs_rms_stats is not None), normalise_reward=False,
+                           obs_rms_stats=obs_rms_stats)
 
         self.policy = PolicyFactory.build_policy(policy_id, self._mdp.obs_dimension, self._mdp.action_dimension).to(self.device)
-
-        state_dict = torch.load(policy_weights_path, weights_only=True)
-        self.policy.load_state_dict(state_dict)
+        self.policy.load_state_dict(policy_state_dict)
 
         self._stop = threading.Event()
 
@@ -35,13 +47,13 @@ class Evaluator:
 
         last_observation = self._mdp.reset()
 
-        while not self._stop.is_set(): # should write graceful closing for this
+        while not self._stop.is_set():
             distribution = self.policy.forward(last_observation)
             action = self.policy.sample_action(distribution)
 
-            next_observation, reward, done = self._mdp.step(action)
+            next_observation, reward, termination_state = self._mdp.step(action)
 
-            if done:
+            if termination_state is not MdpTerminationState.IN_PROGRESS:
                 last_observation = self._mdp.reset()
             else:
                 last_observation = next_observation
@@ -57,5 +69,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    evaluator = Evaluator(args.environment, args.policy,args.weights)
+    evaluator = Evaluator(args.environment, args.policy, args.weights)
     evaluator.evaluate()

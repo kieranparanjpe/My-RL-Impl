@@ -21,7 +21,7 @@ class SingleBetaPolicy(Policy):
     def sample_action(self, distribution : torch.distributions.Distribution) -> torch.Tensor:
         raw_action = super().sample_action(distribution)
         # action currently bounded between [0, 1] -> we want to make it between action range
-        return raw_action * self.action_scale - self.action_shift
+        return raw_action * self.action_scale + self.action_shift
 
     def log_probability(self, action: torch.Tensor, distribution: torch.distributions.Distribution) -> torch.Tensor:
         # we need to sum the log probabilities together because
@@ -31,7 +31,7 @@ class SingleBetaPolicy(Policy):
         # then we also need to correct for the transformation of the random variable, following for u ~ p(u),
         # a = f(u), p(a) = p(u) * |du/da|
 
-        raw_action = ((action + self.action_shift) / self.action_scale).clamp(1e-6, 1 - 1e-6) # clamp for stability
+        raw_action = ((action - self.action_shift) / self.action_scale).clamp(1e-6, 1 - 1e-6) # clamp for stability
         log_prob = distribution.log_prob(raw_action).sum(-1, keepdim=True)
         log_prob -= action.shape[-1] * torch.log(torch.tensor(self.action_scale, device=action.device))
 

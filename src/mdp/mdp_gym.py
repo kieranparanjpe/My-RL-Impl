@@ -1,5 +1,6 @@
 from typing import cast
 
+import numpy as np
 import torch
 import gymnasium as gym
 
@@ -10,8 +11,10 @@ from .mdp_termination_state import MdpTerminationState
 
 class MdpGym(Mdp):
 
-    def __init__(self, environment_id : str, device : torch.device = torch.device('cpu'), render_mode=None,
-                 recorder : BaseRecorder = NullRecorder()):
+    def __init__(self, environment_id: str, device: torch.device = torch.device('cpu'), render_mode=None,
+                 recorder: BaseRecorder = NullRecorder(),
+                 normalise_obs: bool = True, normalise_reward: bool = True,
+                 obs_rms_stats: tuple[np.ndarray, np.ndarray] | None = None):
         super().__init__(device)
 
         if recorder.enabled:
@@ -24,6 +27,24 @@ class MdpGym(Mdp):
             )
         else:
             self._env = gym.make(environment_id, render_mode=render_mode)
+
+        if normalise_obs:
+            self._env = gym.wrappers.NormalizeObservation(self._env)
+            self._norm_obs_wrapper = self._env
+            if obs_rms_stats is not None:
+                mean, var = obs_rms_stats
+                self._norm_obs_wrapper.obs_rms.mean = mean
+                self._norm_obs_wrapper.obs_rms.var = var
+                self._norm_obs_wrapper.update_running_mean = False
+
+        if normalise_reward:
+            self._env = gym.wrappers.NormalizeReward(self._env, gamma=0.99)
+
+    @property
+    def obs_rms_stats(self) -> tuple[np.ndarray, np.ndarray] | None:
+        if self._norm_obs_wrapper is None:
+            return None
+        return self._norm_obs_wrapper.obs_rms.mean, self._norm_obs_wrapper.obs_rms.var
 
     @property
     def obs_dimension(self) -> int:
