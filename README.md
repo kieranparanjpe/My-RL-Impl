@@ -40,17 +40,28 @@ training and save them locally, as well as upload them to W&B.
 
 ### Setup
 
-Before anything, install Python 3.
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
 
-First clone the repository:
+**1. Install uv** (if you don't have it):
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**2. Clone the repository:**
 ```
 git clone https://github.com/kieranparanjpe/My-RL-Impl.git
 cd My-RL-Impl
 ```
 
-Then install dependencies. You may want to install into a virtual environment. 
+**3. Create the virtual environment and install dependencies:**
 ```
-pip install -r requirements.txt
+uv sync
+```
+This automatically creates a `.venv` and installs all pinned dependencies.
+
+**4. Activate the virtual environment:**
+```
+source .venv/bin/activate
 ```
 
 ### Running
