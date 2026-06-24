@@ -1,17 +1,23 @@
+from src.algorithms.policies.policy_configs import CategoricalPolicyConfig, GaussianPolicyConfig, BetaPolicyConfig, PolicyConfig
 from .policy import Policy
 from .categorical_policy import CategoricalPolicy
 from .single_beta_policy import SingleBetaPolicy
 from .single_gaussian_policy import SingleGaussianPolicy
 
+
 class PolicyFactory:
 
     @classmethod
-    def build_policy(cls, policy_id : str, obs_dimension : int, action_dimension : int) -> Policy:
+    def build_policy(cls, policy_id: str, obs_dimension: int, action_dimension: int,
+                     config: PolicyConfig | None = None) -> Policy:
         if policy_id == 'single_gaussian':
-            return SingleGaussianPolicy(obs_dimension, action_dimension)
+            cfg = config if isinstance(config, GaussianPolicyConfig) else GaussianPolicyConfig()
+            return SingleGaussianPolicy(obs_dimension, action_dimension, cfg)
         elif policy_id == 'categorical':
-            return CategoricalPolicy(obs_dimension, action_dimension)
+            cfg = config if isinstance(config, CategoricalPolicyConfig) else CategoricalPolicyConfig()
+            return CategoricalPolicy(obs_dimension, action_dimension, cfg)
         elif policy_id == 'single_beta':
-            return SingleBetaPolicy(obs_dimension, action_dimension)
+            cfg = config if isinstance(config, BetaPolicyConfig) else BetaPolicyConfig()
+            return SingleBetaPolicy(obs_dimension, action_dimension, cfg)
 
-        raise ValueError(f"Policy not found {policy_id}")
+        raise ValueError(f"Policy not found: {policy_id}")

@@ -2,20 +2,19 @@ from typing import override
 
 import torch
 
+from src.algorithms.policies.policy_configs import BetaPolicyConfig
 from .policy import Policy
 
 
 class SingleBetaPolicy(Policy):
     """Single Beta Policy class. Actions are clamped between -1 and 1."""
-    def __init__(self, input_size : int, number_actions : int, action_range=(-0.4, 0.4)):
+    def __init__(self, input_size : int, number_actions : int, config : BetaPolicyConfig = BetaPolicyConfig()):
         super().__init__(input_size, number_actions)
+        self._trunk, trunk_out = config.build_trunk(input_size)
+        self._head = torch.nn.Linear(trunk_out, number_actions * 2)
 
-        self._fc1 = torch.nn.Linear(input_size, 64)
-        self._fc2 = torch.nn.Linear(64, 64)
-        self._fc3 = torch.nn.Linear(64, number_actions * 2)
-
-        self.action_scale = float(action_range[1] - action_range[0])
-        self.action_shift = float(action_range[0])
+        self.action_scale = float(config.action_range[1] - config.action_range[0])
+        self.action_shift = float(config.action_range[0])
 
     @override
     def sample_action(self, distribution : torch.distributions.Distribution) -> torch.Tensor:
@@ -39,13 +38,7 @@ class SingleBetaPolicy(Policy):
 
     def forward(self, observation : torch.Tensor) -> torch.distributions.Distribution:
         """Converts from the observation to number_actions beta distributions to represent one per action dim."""
-        x = self._fc1(observation)
-        x = torch.nn.functional.relu(x)
-
-        x = self._fc2(x)
-        x = torch.nn.functional.relu(x)
-
-        x = self._fc3(x)
+        x = self._head(self._trunk(observation))
 
         # keep between 1.02 and 500.0
         x = torch.nn.functional.softplus(x) + 1e-2 + 1

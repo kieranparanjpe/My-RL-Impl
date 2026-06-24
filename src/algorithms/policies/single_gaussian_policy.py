@@ -1,16 +1,15 @@
 import torch
 
+from src.algorithms.policies.policy_configs import GaussianPolicyConfig
 from .policy import Policy
 
 
 class SingleGaussianPolicy(Policy):
 
-    def __init__(self, input_size : int, number_actions : int):
+    def __init__(self, input_size : int, number_actions : int, config : GaussianPolicyConfig = GaussianPolicyConfig()):
         super().__init__(input_size, number_actions)
-
-        self._fc1 = torch.nn.Linear(input_size, 64)
-        self._fc2 = torch.nn.Linear(64, 64)
-        self._fc3 = torch.nn.Linear(64, number_actions * 2)
+        self._trunk, trunk_out = config.build_trunk(input_size)
+        self._head = torch.nn.Linear(trunk_out, number_actions * 2)
 
     def log_probability(self, action : torch.Tensor, distribution : torch.distributions.Distribution) -> torch.Tensor:
         # we need to sum the log probabilities together because
@@ -20,13 +19,7 @@ class SingleGaussianPolicy(Policy):
 
     def forward(self, observation : torch.Tensor) -> torch.distributions.Distribution:
         """Converts from the observation to number_actions normal distributions to represent one per action dim."""
-        x = self._fc1(observation)
-        x = torch.nn.functional.relu(x)
-
-        x = self._fc2(x)
-        x = torch.nn.functional.relu(x)
-
-        x = self._fc3(x)
+        x = self._head(self._trunk(observation))
 
         means, raw_stds = x.chunk(2, dim=-1)
         stds = torch.nn.functional.softplus(raw_stds)

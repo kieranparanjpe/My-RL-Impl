@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import gymnasium as gym
 
+from src.mdp.mdp_config import MdpConfig
 from src.log import BaseRecorder, NullRecorder
 from .mdp_base import Mdp
 from .mdp_termination_state import MdpTerminationState
@@ -13,9 +14,11 @@ class MdpGym(Mdp):
 
     def __init__(self, environment_id: str, device: torch.device = torch.device('cpu'), render_mode=None,
                  recorder: BaseRecorder = NullRecorder(),
-                 normalise_obs: bool = True, normalise_reward: bool = True,
+                 mdp_config: MdpConfig = MdpConfig(),
                  obs_rms_stats: tuple[np.ndarray, np.ndarray] | None = None):
         super().__init__(device)
+
+        self._norm_obs_wrapper: gym.wrappers.NormalizeObservation | None = None
 
         if recorder.enabled:
             base_env = gym.make(environment_id, render_mode="rgb_array")
@@ -28,7 +31,7 @@ class MdpGym(Mdp):
         else:
             self._env = gym.make(environment_id, render_mode=render_mode)
 
-        if normalise_obs:
+        if mdp_config.normalise_obs:
             self._env = gym.wrappers.NormalizeObservation(self._env)
             self._norm_obs_wrapper = self._env
             if obs_rms_stats is not None:
@@ -37,8 +40,8 @@ class MdpGym(Mdp):
                 self._norm_obs_wrapper.obs_rms.var = var
                 self._norm_obs_wrapper.update_running_mean = False
 
-        if normalise_reward:
-            self._env = gym.wrappers.NormalizeReward(self._env, gamma=0.99)
+        if mdp_config.normalise_reward:
+            self._env = gym.wrappers.NormalizeReward(self._env, gamma=mdp_config.reward_norm_gamma)
 
     @property
     def obs_rms_stats(self) -> tuple[np.ndarray, np.ndarray] | None:
@@ -81,4 +84,3 @@ class MdpGym(Mdp):
 
     def close(self):
         self._env.close()
-

@@ -5,6 +5,7 @@ import torch
 import argparse
 
 from src.algorithms.policies import PolicyFactory
+from src.config import MdpConfig
 from src.mdp import MdpGym, MdpTerminationState
 
 
@@ -14,21 +15,24 @@ class Evaluator:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         checkpoint = torch.load(policy_weights_path, weights_only=True)
-        if isinstance(checkpoint, dict) and "policy" in checkpoint:
-            policy_state_dict = checkpoint["policy"]
-            obs_rms_stats = (
-                checkpoint["obs_mean"].numpy(),
-                checkpoint["obs_var"].numpy(),
-            ) if "obs_mean" in checkpoint else None
-        else:
-            policy_state_dict = checkpoint
-            obs_rms_stats = None
+        policy_state_dict = checkpoint["policy"]
+
+        norm_stats_raw = checkpoint.get("norm_stats")
+        obs_rms_stats = (
+            norm_stats_raw["obs_mean"].numpy(),
+            norm_stats_raw["obs_var"].numpy(),
+        ) if norm_stats_raw is not None else None
+
+        mdp_config = MdpConfig(
+            normalise_obs=(obs_rms_stats is not None),
+            normalise_reward=False,
+        )
 
         self._mdp = MdpGym(environment_id, self.device, render_mode='human',
-                           normalise_obs=(obs_rms_stats is not None), normalise_reward=False,
-                           obs_rms_stats=obs_rms_stats)
+                           mdp_config=mdp_config, obs_rms_stats=obs_rms_stats)
 
-        self.policy = PolicyFactory.build_policy(policy_id, self._mdp.obs_dimension, self._mdp.action_dimension).to(self.device)
+        self.policy = PolicyFactory.build_policy(policy_id, self._mdp.obs_dimension,
+                                                 self._mdp.action_dimension).to(self.device)
         self.policy.load_state_dict(policy_state_dict)
 
         self._stop = threading.Event()
@@ -59,6 +63,7 @@ class Evaluator:
                 last_observation = next_observation
 
         self._mdp.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

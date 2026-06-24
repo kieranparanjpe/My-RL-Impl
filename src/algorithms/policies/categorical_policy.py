@@ -1,27 +1,20 @@
 import torch
 from typing_extensions import override
 
+from src.algorithms.policies.policy_configs import CategoricalPolicyConfig
 from .policy import Policy
 
 
 class CategoricalPolicy(Policy):
 
-    def __init__(self, input_size : int, number_actions : int):
+    def __init__(self, input_size : int, number_actions : int, config : CategoricalPolicyConfig = CategoricalPolicyConfig()):
         super().__init__(input_size, number_actions)
-
-        self._fc1 = torch.nn.Linear(input_size, 64)
-        self._fc2 = torch.nn.Linear(64, 64)
-        self._fc3 = torch.nn.Linear(64, number_actions)
+        self._trunk, trunk_out = config.build_trunk(input_size)
+        self._head = torch.nn.Linear(trunk_out, number_actions)
 
     def forward(self, observation : torch.Tensor) -> torch.distributions.Distribution:
         """Converts from the observation to categorical distribution over discrete actions."""
-        x = self._fc1(observation)
-        x = torch.nn.functional.relu(x)
-
-        x = self._fc2(x)
-        x = torch.nn.functional.relu(x)
-
-        x = self._fc3(x)
+        x = self._head(self._trunk(observation))
 
         return torch.distributions.Categorical(logits=x)
 

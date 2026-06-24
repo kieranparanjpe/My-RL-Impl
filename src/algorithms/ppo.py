@@ -9,12 +9,15 @@ from src.log import Logger
 from .algorithm import Algorithm
 from .value_function import ValueFunction
 from .policies.policy import Policy
-from .hyperparameters import Hyperparameters
+from src.algorithms.algorithm_config import PPOHyperparams
+from src.algorithms.network_config import ValueFunctionConfig
 from .replay_buffer import ReplayBuffer
 
 class PPO(Algorithm):
-    def __init__(self, hyperparameters : Hyperparameters, policy : Policy, obs_dimension : int, action_dimension :
-    int, discrete : bool = False, logger : Optional[Logger]=None, device : torch.device = torch.device('cpu')):
+    def __init__(self, hyperparameters: PPOHyperparams, policy: Policy, obs_dimension: int,
+                 action_dimension: int, discrete: bool = False, logger: Optional[Logger] = None,
+                 device: torch.device = torch.device('cpu'),
+                 value_fn_config: ValueFunctionConfig = ValueFunctionConfig()):
         super().__init__(hyperparameters, policy, obs_dimension, action_dimension, discrete, logger=logger,
                          device=device)
 
@@ -24,7 +27,7 @@ class PPO(Algorithm):
             "losses/policy_entropy": 0.0,
         })
 
-        self._value = ValueFunction(policy.input_size).to(self.device)
+        self._value = ValueFunction(policy.input_size, value_fn_config).to(self.device)
 
         self._replay_buffer = ReplayBuffer(self.hyperparameters.buffer_size, obs_dimension,
                                            1 if discrete else action_dimension,

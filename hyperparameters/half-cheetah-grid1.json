@@ -1,13 +1,27 @@
 {
-
-  "n_timesteps": [5000000],
-  "lr": [0.0003],
-  "value_lr": [0.0003],
-  "gamma": [0.99],
-  "lamda": [0.95],
-  "importance_ratio_clip": [0.2],
-  "batch_size": [512],
-  "buffer_size": [2048],
-  "gradient_epochs": [10],
-  "entropy_loss_weight": [0.0, 0.005]
+  "algorithm": {
+    "n_timesteps": [5000000],
+    "lr": [0.0003],
+    "value_lr": [0.0003],
+    "gamma": [0.99],
+    "lamda": [0.95],
+    "importance_ratio_clip": [0.2],
+    "batch_size": [512],
+    "buffer_size": [2048],
+    "gradient_epochs": [10],
+    "entropy_loss_weight": [0.0, 0.005]
+  },
+  "policy": {
+    "hidden_sizes": [[64, 64]],
+    "activation": ["tanh"]
+  },
+  "value_fn": {
+    "hidden_sizes": [[64, 64]],
+    "activation": ["relu"]
+  },
+  "mdp": {
+    "normalise_obs": [true],
+    "normalise_reward": [true],
+    "reward_norm_gamma": [0.99]
+  }
 }
