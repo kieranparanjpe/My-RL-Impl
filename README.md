@@ -78,9 +78,46 @@ python -m src.train \
     --grid "hyperparameters/half-cheetah-grid1.json" \
     -r -s -l
 ```
-`--hyperparameters` will load hyperparams from a json file, and `--grid` will create a grid of hyperparameters to 
-search over, and spawn n runs to try each combination. Do not use both at the same time. Example json file structure 
-can be found in `/hyperparameters`.
+`--hyperparameters` will load hyperparams from a json file, and `--grid` will create a grid of hyperparameters to
+search over, and spawn n runs to try each combination. Do not use both at the same time.
+
+The json file is split into four sections. All sections are optional and fall back to defaults if omitted:
+
+```json
+{
+  "algorithm": {
+    "n_timesteps": 2000000,
+    "lr": 0.0003,
+    "value_lr": 0.0003,
+    "gamma": 0.99,
+    "lamda": 0.95,
+    "importance_ratio_clip": 0.2,
+    "batch_size": 64,
+    "buffer_size": 2048,
+    "gradient_epochs": 10,
+    "entropy_loss_weight": 0.0001
+  },
+  "policy": {
+    "hidden_sizes": [64, 64],
+    "activation": "relu",
+    "action_range": [-0.4, 0.4]
+  },
+  "value_fn": {
+    "hidden_sizes": [64, 64],
+    "activation": "relu"
+  },
+  "mdp": {
+    "normalise_obs": true,
+    "normalise_reward": true,
+    "reward_norm_gamma": 0.99
+  }
+}
+```
+
+`action_range` is only used by `single_beta`. Supported activations are `relu`, `tanh`, and `leaky_relu`.
+
+For grid search, any value that is a list becomes a grid dimension. All grid dimensions across all sections are
+combined into a cartesian product. Example files can be found in `/hyperparameters`.
 
 Use `-r` to enable recording, `-s` to enable policy saving, and `-l` to enable logging. To enable logging, you will 
 need to log in with 
