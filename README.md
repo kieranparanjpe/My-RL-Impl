@@ -16,8 +16,9 @@ A more detailed report of my implementation and results, can be found [here]().
 
 ### MDP support
 
-Right now there is MDP support for [gymnasium](https://gymnasium.farama.org/index.html) tasks. I've tried training policies on CartPole-v1, LunarLander-v3 and 
-HalfCheetah-v5. Note that these are a variety of continous/discrete action and observation spaces.
+Right now there is MDP support for [gymnasium](https://gymnasium.farama.org/index.html) tasks. I've tried training 
+policies on CartPole-v1, LunarLander-v3, HalfCheetah-v5, Walker2d-v5 and Humanoid-v5. Note that these are a variety of 
+continous/discrete action and observation spaces.
 
 ### Algorithms
 
@@ -70,7 +71,7 @@ There are two files to run: `train.py` and `evaluate.py`.
 
 #### Training
 ```
-python -m src.train \
+uv run python -m src.train \
     --environment "<gymnasium environment id>" \
     --policy "[categorical, single_beta, single_gaussian]" \
     --algorithm "ppo" \
@@ -128,7 +129,7 @@ wandb login
 #### Evaluating
 This will display a trained policy visually. 
 ```
-python -m src.evaluate \
+uv run python -m src.evaluate \
     --environment "<gymnasium environment id>" \
     --policy "[categorical, single_beta, single_gaussian]" \
     --weights "path/to/saved/weights.pth"

@@ -5,7 +5,7 @@ from tqdm.auto import tqdm
 from datetime import datetime
 
 from src.log import WandBLogger, NullLogger, NullRecorder, Recorder
-from src.config import RunHyperparams, RunInfo, ConfigLoader
+from src.config import RunConfig, RunInfo, ConfigLoader
 from src.algorithms import PPO
 from src.algorithms.policies import PolicyFactory
 from src.mdp import MdpGym, MdpTerminationState
@@ -15,7 +15,7 @@ import os
 
 class Trainer:
 
-    def __init__(self, run_info: RunInfo, run_config: RunHyperparams,
+    def __init__(self, run_info: RunInfo, run_config: RunConfig,
                  logging=True, save_policy=False, record=False):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -114,7 +114,7 @@ class Trainer:
         self._logger.finish()
 
 
-def run_one(args, run_config: RunHyperparams, index, now):
+def run_one(args, run_config: RunConfig, index, now):
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
 
@@ -148,7 +148,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def gridsearch(args, configs: list[RunHyperparams], now):
+def gridsearch(args, configs: list[RunConfig], now):
     max_parallel = min(os.cpu_count() or 1, 8)
     config_index = 0
 
@@ -180,7 +180,7 @@ def main():
         run_config = ConfigLoader.load_single(args.hyperparameters, args.algorithm, args.policy)
         run_one(args, run_config, None, now)
     else:
-        run_one(args, RunHyperparams(), None, now)
+        run_one(args, RunConfig(), None, now)
 
 
 if __name__ == "__main__":

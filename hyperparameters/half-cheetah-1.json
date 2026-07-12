@@ -6,14 +6,14 @@
     "gamma": 0.99,
     "lamda": 0.95,
     "importance_ratio_clip": 0.2,
-    "batch_size": 64,
+    "batch_size": 512,
     "buffer_size": 2048,
     "gradient_epochs": 10,
-    "entropy_loss_weight": 0.0001
+    "entropy_loss_weight": 0.0
   },
   "policy": {
     "hidden_sizes": [64, 64],
-    "activation": "tanh"
+    "activation": "relu"
   },
   "value_fn": {
     "hidden_sizes": [64, 64],
