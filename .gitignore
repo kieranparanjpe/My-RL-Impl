@@ -183,3 +183,4 @@ cython_debug/
 wandb
 saved_policies
 saved_videos
+*.Identifier
