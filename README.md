@@ -12,7 +12,7 @@ This project contains 4 key sections: the training loop, the MDP, the algorithms
 decoupled such that we can use the same training loop to train on different tasks with different algorithms, 
 making it easy to iterate and learn. 
 
-A more detailed report of my implementation and results, can be found [here]().
+A more detailed report of my implementation and results, can be found [here](https://kieranparanjpe.github.io/My-RL-Impl/report/PPO_Report.pdf).
 
 ### MDP support
 
