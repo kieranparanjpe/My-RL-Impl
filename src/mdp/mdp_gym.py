@@ -4,8 +4,10 @@ import numpy as np
 import torch
 import gymnasium as gym
 
+from log import BaseRecorder
 from src.mdp.mdp_config import MdpConfig
 from src.log import BaseRecorder, NullRecorder
+from . import MdpConfig
 from .mdp_base import Mdp
 from .mdp_termination_state import MdpTerminationState
 
@@ -20,16 +22,7 @@ class MdpGym(Mdp):
 
         self._norm_obs_wrapper: gym.wrappers.NormalizeObservation | None = None
 
-        if recorder.enabled:
-            base_env = gym.make(environment_id, render_mode="rgb_array")
-            recorder = cast(BaseRecorder, cast(object, recorder))
-            self._env = gym.wrappers.RecordVideo(
-                base_env,
-                video_folder=recorder.path,
-                step_trigger=recorder.should_record
-            )
-        else:
-            self._env = gym.make(environment_id, render_mode=render_mode)
+        self._env = self.initialize_environment(environment_id, mdp_config, recorder, render_mode)
 
         if mdp_config.normalise_obs:
             self._env = gym.wrappers.NormalizeObservation(self._env)
@@ -43,6 +36,18 @@ class MdpGym(Mdp):
         if mdp_config.normalise_reward:
             self._env = gym.wrappers.NormalizeReward(self._env, gamma=mdp_config.reward_norm_gamma)
 
+    def initialize_environment(self, environment_id: str, mdp_config: MdpConfig, recorder: BaseRecorder, render_mode):
+        if recorder.enabled:
+            base_env = gym.make(environment_id, render_mode="rgb_array", **mdp_config.make_kwargs)
+            recorder = cast(BaseRecorder, cast(object, recorder))
+            return gym.wrappers.RecordVideo(
+                base_env,
+                video_folder=recorder.path,
+                step_trigger=recorder.should_record
+            )
+        else:
+            return gym.make(environment_id, render_mode=render_mode, **mdp_config.make_kwargs)
+
     @property
     def obs_rms_stats(self) -> tuple[np.ndarray, np.ndarray] | None:
         if self._norm_obs_wrapper is None:
@@ -52,7 +57,7 @@ class MdpGym(Mdp):
     @property
     def obs_dimension(self) -> int:
         return self._env.observation_space.shape[0]
-    
+
     @property
     def discrete(self) -> bool:
         return isinstance(self._env.action_space, gym.spaces.Discrete)
@@ -75,7 +80,7 @@ class MdpGym(Mdp):
             raw_action = action.cpu().numpy()
 
         next_obs, reward, terminated, truncated, _ = self._env.step(raw_action)
-        
+
         terminal_state = MdpTerminationState.TERMINATED if terminated else (MdpTerminationState.TRUNCATED if truncated
                                                                             else MdpTerminationState.IN_PROGRESS)
         next_obs_tensor = torch.tensor(next_obs, dtype=torch.float32, device=self.device)
