@@ -7,4 +7,4 @@ class MdpConfig:
     normalise_obs: bool = True
     normalise_reward: bool = True
     reward_norm_gamma: float = 0.99
-    make_kwargs : dict[str, Any] = field(default_factory={})
+    make_kwargs : dict[str, Any] = field(default_factory=dict)
