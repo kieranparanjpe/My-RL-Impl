@@ -4,10 +4,8 @@ import numpy as np
 import torch
 import gymnasium as gym
 
-from log import BaseRecorder
-from src.mdp.mdp_config import MdpConfig
 from src.log import BaseRecorder, NullRecorder
-from . import MdpConfig
+from .mdp_config import MdpConfig
 from .mdp_base import Mdp
 from .mdp_termination_state import MdpTerminationState
 
