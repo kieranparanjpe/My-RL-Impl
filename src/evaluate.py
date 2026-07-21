@@ -14,8 +14,8 @@ class Evaluator:
     def __init__(self, environment_id, policy_id, policy_weights_path):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        checkpoint = torch.load(policy_weights_path, weights_only=True)
-        policy_state_dict = checkpoint["policy"]
+        checkpoint = torch.load(policy_weights_path, weights_only=True) if policy_weights_path else {}
+        policy_state_dict = checkpoint.get("policy")
 
         norm_stats_raw = checkpoint.get("norm_stats")
         obs_rms_stats = (
@@ -33,7 +33,8 @@ class Evaluator:
 
         self.policy = PolicyFactory.build_policy(policy_id, self._mdp.obs_dimension,
                                                  self._mdp.action_dimension).to(self.device)
-        self.policy.load_state_dict(policy_state_dict)
+        if policy_state_dict:
+            self.policy.load_state_dict(policy_state_dict)
 
         self._stop = threading.Event()
 
