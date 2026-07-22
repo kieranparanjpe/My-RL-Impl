@@ -3,6 +3,8 @@ from typing import cast
 import numpy as np
 import torch
 import gymnasium as gym
+import gym_pusht  # noqa: F401 — registers gym_pusht environments with gymnasium
+from src.mdp import envs  # noqa: F401 — registers custom environments with gymnasium
 
 from src.log import BaseRecorder, NullRecorder
 from .mdp_config import MdpConfig
