@@ -1,46 +1,42 @@
 import argparse
+import functools
+import os
 
 import torch
 from tqdm.auto import tqdm
 from datetime import datetime
 
-from src.log import WandBLogger, NullLogger, NullRecorder, Recorder
-from src.config import RunConfig, RunInfo, ConfigLoader
+from rl_commons.config import RunInfo
+from rl_commons.execution import gridsearch, BaseTrainer, run_one
+from rl_commons.mdp import MdpTerminationState
+from src.config import RunConfig, load_config, load_grid_configs
 from src.algorithms import PPO
 from src.algorithms.policies import PolicyFactory
-from src.mdp import MdpGym, MdpTerminationState
-from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED
-import os
 
 
-class Trainer:
+class Trainer(BaseTrainer):
 
     def __init__(self, run_info: RunInfo, run_config: RunConfig,
                  logging=True, save_policy=False, record=False):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        self._run_config = run_config
-        self._run_info = run_info
-
-        print(f"\nTraining: {self._run_info.run_name()} with algorithm: [{self._run_info.algorithm_id}] and policy: "
-              f"[{self._run_info.policy_id}]")
-        print(f"Using config: {self._run_config!r}")
-
-        self._logger = WandBLogger(self._run_info, run_config.__dict__, {
-            "charts/episodic_return": 0.0,
-            "charts/episode_length": 0,
-            "global_step": 0,
-        }) if logging else NullLogger()
+        super().__init__(
+            run_info=run_info,
+            run_config=run_config,
+            mdp_config=run_config.mdp,
+            entity="kieranparanjpe-mcgill-university",
+            project="RL_Project1",
+            log_elements={
+                "charts/episodic_return": 0.0,
+                "charts/episode_length": 0,
+                "global_step": 0,
+            },
+            logging=logging,
+            record=record,
+            total_timesteps=run_config.algorithm.n_timesteps,
+        )
 
         self._should_save_policy = save_policy
         if self._should_save_policy:
             self._create_policy_folder()
-
-        self._recorder = Recorder(self._run_info.local_folder_path("saved_videos"),
-                                  5, run_config.algorithm.n_timesteps) if record else NullRecorder()
-
-        self._mdp = MdpGym(self._run_info.environment_id, self.device, render_mode=None,
-                           recorder=self._recorder, mdp_config=run_config.mdp)
 
         self.policy = PolicyFactory.build_policy(
             self._run_info.policy_id,
@@ -73,7 +69,7 @@ class Trainer:
             }
         torch.save(save_dict, f'{self._run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth')
 
-    def train(self):
+    def run(self):
         last_observation = self._mdp.reset()
         episode_number = 0
         n_timesteps = self._run_config.algorithm.n_timesteps
@@ -114,24 +110,6 @@ class Trainer:
         self._logger.finish()
 
 
-def run_one(args, run_config: RunConfig, index, now):
-    torch.set_num_threads(1)
-    torch.set_num_interop_threads(1)
-
-    run_info = RunInfo(
-        environment_id=args.environment,
-        algorithm_id=args.algorithm,
-        policy_id=args.policy,
-        grid_index=index,
-        time=now,
-    )
-
-    trainer = Trainer(run_info, run_config, logging=args.log,
-                      save_policy=args.save, record=args.record)
-    trainer.train()
-    return True
-
-
 def parse_args():
     parser = argparse.ArgumentParser()
 
@@ -148,39 +126,20 @@ def parse_args():
     return parser.parse_args()
 
 
-def gridsearch(args, configs: list[RunConfig], now):
-    max_parallel = min(os.cpu_count() or 1, 8)
-    config_index = 0
-
-    with ProcessPoolExecutor(max_workers=max_parallel) as pool:
-        in_flight = set()
-
-        for _ in range(min(max_parallel, len(configs))):
-            in_flight.add(pool.submit(run_one, args, configs[config_index], config_index, now))
-            config_index += 1
-
-        while in_flight:
-            done, in_flight = wait(in_flight, return_when=FIRST_COMPLETED)
-
-            for fut in done:
-                fut.result()
-                if config_index < len(configs):
-                    in_flight.add(pool.submit(run_one, args, configs[config_index], config_index, now))
-                    config_index += 1
-
-
 def main():
     args = parse_args()
     now = datetime.now()
 
+    factory = functools.partial(Trainer, logging=args.log, save_policy=args.save, record=args.record)
+    _run_one = functools.partial(run_one, args=args, now=now, trainer_factory=factory)
+
     if args.grid is not None:
-        configs = ConfigLoader.load_grid(args.grid, args.algorithm, args.policy)
-        gridsearch(args, configs, now)
+        configs = load_grid_configs(args.grid, args.algorithm, args.policy)
+        gridsearch(_run_one, configs)
     elif args.hyperparameters is not None:
-        run_config = ConfigLoader.load_single(args.hyperparameters, args.algorithm, args.policy)
-        run_one(args, run_config, None, now)
+        _run_one(load_config(args.hyperparameters, args.algorithm, args.policy), None)
     else:
-        run_one(args, RunConfig(), None, now)
+        _run_one(RunConfig(), None)
 
 
 if __name__ == "__main__":

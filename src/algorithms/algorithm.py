@@ -4,8 +4,8 @@ from typing import Optional
 
 import torch
 
-from src.mdp import MdpTerminationState
-from src.log import Logger
+from rl_commons.mdp import MdpTerminationState
+from rl_commons.log import Logger
 from .policies.policy import Policy
 
 class Algorithm(ABC):

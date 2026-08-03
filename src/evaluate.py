@@ -1,20 +1,14 @@
-import queue
-import threading
-
-import torch
 import argparse
 
+from rl_commons.execution import BaseEvaluator
+from rl_commons.mdp import MdpTerminationState, MdpConfig
 from src.algorithms.policies import PolicyFactory
-from src.config import MdpConfig
-from src.mdp import MdpGym, MdpTerminationState
 
 
-class Evaluator:
+class Evaluator(BaseEvaluator):
 
     def __init__(self, environment_id, policy_id, policy_weights_path):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        checkpoint = torch.load(policy_weights_path, weights_only=True) if policy_weights_path else {}
+        checkpoint = self.load_checkpoint(policy_weights_path)
         policy_state_dict = checkpoint.get("policy")
 
         norm_stats_raw = checkpoint.get("norm_stats")
@@ -28,28 +22,14 @@ class Evaluator:
             normalise_reward=False,
         )
 
-        self._mdp = MdpGym(environment_id, self.device, render_mode='human',
-                           mdp_config=mdp_config, obs_rms_stats=obs_rms_stats)
+        super().__init__(environment_id, mdp_config, obs_rms_stats=obs_rms_stats)
 
         self.policy = PolicyFactory.build_policy(policy_id, self._mdp.obs_dimension,
                                                  self._mdp.action_dimension).to(self.device)
         if policy_state_dict:
             self.policy.load_state_dict(policy_state_dict)
 
-        self._stop = threading.Event()
-
-    def _listen_for_commands(self):
-        commands = queue.Queue()
-        while not self._stop.is_set():
-            cmd = input().strip().lower()
-            commands.put(cmd)
-            if cmd in {"x", "close", "quit", "exit"}:
-                self._stop.set()
-
-    def evaluate(self):
-        print("Type 'x' or 'close' + Enter to stop.")
-        threading.Thread(target=self._listen_for_commands, daemon=True).start()
-
+    def _run(self):
         last_observation = self._mdp.reset()
 
         while not self._stop.is_set():
@@ -62,8 +42,6 @@ class Evaluator:
                 last_observation = self._mdp.reset()
             else:
                 last_observation = next_observation
-
-        self._mdp.close()
 
 
 if __name__ == "__main__":

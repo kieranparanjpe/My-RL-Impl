@@ -4,8 +4,8 @@ from typing import Optional
 import torch
 from torch.utils.data import DataLoader
 
-from src.mdp import MdpTerminationState
-from src.log import Logger
+from rl_commons.mdp import MdpTerminationState
+from rl_commons.log import Logger
 from .algorithm import Algorithm
 from .value_function import ValueFunction
 from .policies.policy import Policy
