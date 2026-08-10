@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from rl_commons.config import RunInfo, ConfigLoader
+from rl_commons.config import RLRunInfo, ConfigLoader
 from rl_commons.mdp import MdpConfig
 
 from src.algorithms.algorithm_config import AlgorithmConfig, PPOHyperparams

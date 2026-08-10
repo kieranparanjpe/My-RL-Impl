@@ -846,6 +846,16 @@ wheels = [
 ]
 
 [[package]]
+name = "ml-commons"
+version = "0.1.0"
+source = { git = "https://github.com/kieranparanjpe/ml-commons.git#127a703b829e9a5e7dc00d9a4a2a3e1e2604ea0b" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "torch" },
+    { name = "wandb" },
+]
+
+[[package]]
 name = "moviepy"
 version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1640,15 +1650,14 @@ wheels = [
 [[package]]
 name = "rl-commons"
 version = "0.1.0"
-source = { git = "https://github.com/kieranparanjpe/rl-commons.git#5771c45ef1dc5aae84ea478432bcf46f20bae39c" }
+source = { git = "https://github.com/kieranparanjpe/rl-commons.git#d517f3d1ccb1789ddb5ca721ebb1621e304e6a42" }
 dependencies = [
     { name = "gym-pusht" },
     { name = "gymnasium", extra = ["box2d", "mujoco"] },
+    { name = "ml-commons" },
     { name = "numpy" },
-    { name = "pydantic" },
     { name = "pymunk" },
     { name = "torch" },
-    { name = "wandb" },
 ]
 
 [[package]]

@@ -6,7 +6,7 @@ import torch
 from tqdm.auto import tqdm
 from datetime import datetime
 
-from rl_commons.config import RunInfo
+from rl_commons.config import RLRunInfo
 from rl_commons.execution import gridsearch, BaseTrainer, run_one
 from rl_commons.mdp import MdpTerminationState
 from src.config import RunConfig, load_config, load_grid_configs
@@ -16,7 +16,7 @@ from src.algorithms.policies import PolicyFactory
 
 class Trainer(BaseTrainer):
 
-    def __init__(self, run_info: RunInfo, run_config: RunConfig,
+    def __init__(self, run_info: RLRunInfo, run_config: RunConfig,
                  logging=True, save_policy=False, record=False):
         super().__init__(
             run_info=run_info,
@@ -82,8 +82,8 @@ class Trainer(BaseTrainer):
                                                                log_prob_action, reward,
                                                                termination_state, timestep)
 
-            if ((updated_policy and self._should_save_policy and episode_number % 500 == 0) or
-                    timestep == n_timesteps - 1):
+            if self._should_save_policy and ((updated_policy and episode_number % 500 == 0) or
+                                             timestep == n_timesteps - 1):
                 self._save_policy(timestep)
 
             self._logger.sum_log_data({
@@ -130,8 +130,17 @@ def main():
     args = parse_args()
     now = datetime.now()
 
-    factory = functools.partial(Trainer, logging=args.log, save_policy=args.save, record=args.record)
-    _run_one = functools.partial(run_one, args=args, now=now, trainer_factory=factory)
+    def make_trainer(run_config, index):
+        run_info = RLRunInfo(
+            task_id=args.environment,
+            algorithm_id=args.algorithm,
+            policy_id=args.policy,
+            grid_index=index,
+            time=now,
+        )
+        return Trainer(run_info, run_config, logging=args.log, save_policy=args.save, record=args.record)
+
+    _run_one = functools.partial(run_one, trainer_factory=make_trainer)
 
     if args.grid is not None:
         configs = load_grid_configs(args.grid, args.algorithm, args.policy)

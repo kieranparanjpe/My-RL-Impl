@@ -22,7 +22,7 @@ class Evaluator(BaseEvaluator):
             normalise_reward=False,
         )
 
-        super().__init__(environment_id, mdp_config, obs_rms_stats=obs_rms_stats)
+        super().__init__(task_id=environment_id, mdp_config=mdp_config, obs_rms_stats=obs_rms_stats)
 
         self.policy = PolicyFactory.build_policy(policy_id, self._mdp.obs_dimension,
                                                  self._mdp.action_dimension).to(self.device)

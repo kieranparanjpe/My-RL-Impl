@@ -1,6 +1,6 @@
 {
   "algorithm": {
-    "n_timesteps": 50000,
+    "n_timesteps": 10000,
     "lr": 0.0003,
     "value_lr": 0.0003,
     "gamma": 0.99,
