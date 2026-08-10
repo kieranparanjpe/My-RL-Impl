@@ -126,21 +126,24 @@ def parse_args():
     return parser.parse_args()
 
 
+def make_trainer(run_config, index, args, now):
+    run_info = RLRunInfo(
+        task_id=args.environment,
+        algorithm_id=args.algorithm,
+        policy_id=args.policy,
+        grid_index=index,
+        time=now,
+    )
+    return Trainer(run_info, run_config, logging=args.log, save_policy=args.save, record=args.record)
+
 def main():
     args = parse_args()
     now = datetime.now()
 
-    def make_trainer(run_config, index):
-        run_info = RLRunInfo(
-            task_id=args.environment,
-            algorithm_id=args.algorithm,
-            policy_id=args.policy,
-            grid_index=index,
-            time=now,
-        )
-        return Trainer(run_info, run_config, logging=args.log, save_policy=args.save, record=args.record)
-
-    _run_one = functools.partial(run_one, trainer_factory=make_trainer)
+    _run_one = functools.partial(
+        run_one,
+        trainer_factory=functools.partial(make_trainer, args=args, now=now)
+    )
 
     if args.grid is not None:
         configs = load_grid_configs(args.grid, args.algorithm, args.policy)
