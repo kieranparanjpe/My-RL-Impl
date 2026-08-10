@@ -12,8 +12,7 @@ from src.algorithms.policies.policy_configs import (
     CategoricalPolicyConfig, GaussianPolicyConfig, BetaPolicyConfig, PolicyConfig,
 )
 
-# Re-export so callers that import RunInfo/ConfigLoader from src.config continue to work.
-__all__ = ["RunInfo", "ConfigLoader", "RunConfig", "load_config", "load_grid_configs"]
+__all__ = ["RLRunInfo", "ConfigLoader", "RunConfig", "load_config", "load_grid_configs"]
 
 
 @dataclass
