@@ -61,7 +61,7 @@ class Trainer(BaseTrainer):
     def _save_policy(self, timestep):
         n_timesteps = self._run_config.algorithm.n_timesteps
         width = len(str(n_timesteps))
-        save_dict = {"policy": self.policy.state_dict()}
+        save_dict = {"policy": self.policy}
         if (stats := self._mdp.obs_rms_stats) is not None:
             save_dict["norm_stats"] = {
                 "obs_mean": torch.tensor(stats[0]),
