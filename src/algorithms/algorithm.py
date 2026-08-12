@@ -6,7 +6,7 @@ import torch
 
 from rl_commons.mdp import MdpTerminationState
 from rl_commons.log import Logger
-from .policies.policy import Policy
+from rl_commons.policies.policy import Policy
 
 class Algorithm(ABC):
 

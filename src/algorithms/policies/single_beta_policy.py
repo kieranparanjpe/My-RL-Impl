@@ -3,7 +3,7 @@ from typing import override
 import torch
 
 from src.algorithms.policies.policy_configs import BetaPolicyConfig
-from .policy import Policy
+from rl_commons.policies.policy import Policy
 
 
 class SingleBetaPolicy(Policy):

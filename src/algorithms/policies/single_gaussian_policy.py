@@ -1,7 +1,7 @@
 import torch
 
 from src.algorithms.policies.policy_configs import GaussianPolicyConfig
-from .policy import Policy
+from rl_commons.policies.policy import Policy
 
 
 class SingleGaussianPolicy(Policy):

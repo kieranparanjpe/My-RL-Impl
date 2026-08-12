@@ -848,7 +848,7 @@ wheels = [
 [[package]]
 name = "ml-commons"
 version = "0.1.0"
-source = { git = "https://github.com/kieranparanjpe/ml-commons.git#127a703b829e9a5e7dc00d9a4a2a3e1e2604ea0b" }
+source = { git = "https://github.com/kieranparanjpe/ml-commons.git#bc0a91e396fa6598637397b79dcbe97759df33ac" }
 dependencies = [
     { name = "pydantic" },
     { name = "torch" },
@@ -1650,7 +1650,7 @@ wheels = [
 [[package]]
 name = "rl-commons"
 version = "0.1.0"
-source = { git = "https://github.com/kieranparanjpe/rl-commons.git#d517f3d1ccb1789ddb5ca721ebb1621e304e6a42" }
+source = { git = "https://github.com/kieranparanjpe/rl-commons.git#f4fa5c96f137b570f39d8afd574fb0c929a2cb0e" }
 dependencies = [
     { name = "gym-pusht" },
     { name = "gymnasium", extra = ["box2d", "mujoco"] },

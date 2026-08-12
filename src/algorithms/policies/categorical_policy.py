@@ -2,7 +2,7 @@ import torch
 from typing_extensions import override
 
 from src.algorithms.policies.policy_configs import CategoricalPolicyConfig
-from .policy import Policy
+from rl_commons.policies.policy import Policy
 
 
 class CategoricalPolicy(Policy):

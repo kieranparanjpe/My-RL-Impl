@@ -8,7 +8,7 @@ from rl_commons.mdp import MdpTerminationState
 from rl_commons.log import Logger
 from .algorithm import Algorithm
 from .value_function import ValueFunction
-from .policies.policy import Policy
+from rl_commons.policies.policy import Policy
 from src.algorithms.algorithm_config import PPOHyperparams
 from src.algorithms.network_config import ValueFunctionConfig
 from .replay_buffer import ReplayBuffer
