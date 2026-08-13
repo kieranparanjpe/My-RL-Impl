@@ -1,10 +1,6 @@
 from dataclasses import dataclass
 
-
-@dataclass
-class AlgorithmConfig:
-    n_timesteps: int = 1_000_000
-    lr: float = 3e-4
+from rl_commons.algorithms.algorithm_config import AlgorithmConfig
 
 
 @dataclass

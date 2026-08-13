@@ -5,6 +5,7 @@ description = "Reinforcement learning implementations"
 requires-python = "==3.12.*"
 dependencies = [
     "rl-commons",
+    "ml-commons",
     "gymnasium[box2d,mujoco]==1.3.0",
     "torch==2.12.0",
     "numpy==2.4.6",
@@ -42,3 +43,4 @@ dev = []
 
 [tool.uv.sources]
 rl-commons = { git = "https://github.com/kieranparanjpe/rl-commons.git" }
+ml-commons = { git = "https://github.com/kieranparanjpe/ml-commons.git" }

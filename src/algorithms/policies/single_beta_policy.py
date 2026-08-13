@@ -4,6 +4,7 @@ import torch
 
 from src.algorithms.policies.policy_configs import BetaPolicyConfig
 from rl_commons.policies.policy import Policy
+from rl_commons.policies.policy_factory import PolicyFactory
 
 
 class SingleBetaPolicy(Policy):
@@ -47,3 +48,11 @@ class SingleBetaPolicy(Policy):
         alphas, betas = x.chunk(2, dim=-1)
         dist = torch.distributions.Beta(alphas, betas)
         return dist
+
+
+def _build_single_beta_policy(obs_dimension: int, action_dimension: int, config) -> Policy:
+    cfg = config if isinstance(config, BetaPolicyConfig) else BetaPolicyConfig()
+    return SingleBetaPolicy(obs_dimension, action_dimension, cfg)
+
+
+PolicyFactory.register('single_beta', _build_single_beta_policy)

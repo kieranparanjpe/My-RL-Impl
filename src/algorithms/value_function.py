@@ -1,6 +1,6 @@
 import torch
 
-from src.algorithms.network_config import ValueFunctionConfig
+from src.algorithms.value_function_config import ValueFunctionConfig
 
 
 class ValueFunction(torch.nn.Module):

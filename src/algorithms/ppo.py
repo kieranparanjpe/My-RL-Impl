@@ -6,11 +6,11 @@ from torch.utils.data import DataLoader
 
 from rl_commons.mdp import MdpTerminationState
 from rl_commons.log import Logger
-from .algorithm import Algorithm
+from rl_commons.algorithms.algorithm import Algorithm
 from .value_function import ValueFunction
 from rl_commons.policies.policy import Policy
-from src.algorithms.algorithm_config import PPOHyperparams
-from src.algorithms.network_config import ValueFunctionConfig
+from src.algorithms.ppo_config import PPOHyperparams
+from src.algorithms.value_function_config import ValueFunctionConfig
 from .replay_buffer import ReplayBuffer
 
 class PPO(Algorithm):

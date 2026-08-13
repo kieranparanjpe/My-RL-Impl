@@ -3,6 +3,7 @@ from typing_extensions import override
 
 from src.algorithms.policies.policy_configs import CategoricalPolicyConfig
 from rl_commons.policies.policy import Policy
+from rl_commons.policies.policy_factory import PolicyFactory
 
 
 class CategoricalPolicy(Policy):
@@ -28,3 +29,11 @@ class CategoricalPolicy(Policy):
     @override
     def entropy(self, distribution : torch.distributions.Distribution) -> torch.Tensor:
         return distribution.entropy()
+
+
+def _build_categorical_policy(obs_dimension: int, action_dimension: int, config) -> Policy:
+    cfg = config if isinstance(config, CategoricalPolicyConfig) else CategoricalPolicyConfig()
+    return CategoricalPolicy(obs_dimension, action_dimension, cfg)
+
+
+PolicyFactory.register('categorical', _build_categorical_policy)

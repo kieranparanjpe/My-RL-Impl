@@ -184,3 +184,6 @@ wandb
 saved_policies
 saved_videos
 *.Identifier
+
+.idea
+.codebase-memory

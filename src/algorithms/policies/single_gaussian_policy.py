@@ -2,6 +2,7 @@ import torch
 
 from src.algorithms.policies.policy_configs import GaussianPolicyConfig
 from rl_commons.policies.policy import Policy
+from rl_commons.policies.policy_factory import PolicyFactory
 
 
 class SingleGaussianPolicy(Policy):
@@ -25,3 +26,11 @@ class SingleGaussianPolicy(Policy):
         stds = torch.nn.functional.softplus(raw_stds)
 
         return torch.distributions.Normal(means, stds)
+
+
+def _build_single_gaussian_policy(obs_dimension: int, action_dimension: int, config) -> Policy:
+    cfg = config if isinstance(config, GaussianPolicyConfig) else GaussianPolicyConfig()
+    return SingleGaussianPolicy(obs_dimension, action_dimension, cfg)
+
+
+PolicyFactory.register('single_gaussian', _build_single_gaussian_policy)

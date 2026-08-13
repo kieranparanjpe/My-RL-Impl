@@ -2,18 +2,14 @@ import argparse
 
 from rl_commons.execution import BaseEvaluator
 from rl_commons.mdp import MdpTerminationState, MdpConfig
+from rl_commons.policies.policy import Policy
 from src.algorithms.policies import PolicyFactory
 
 
 class Evaluator(BaseEvaluator):
 
-    def load_checkpoint(self, path):
-        import torch
-        return torch.load(path, weights_only=False) if path else {}
-
     def __init__(self, environment_id, policy_id, policy_weights_path):
-        checkpoint = self.load_checkpoint(policy_weights_path)
-        policy_state_dict = checkpoint.get("policy")
+        checkpoint = Policy.load_checkpoint(policy_weights_path)
 
         norm_stats_raw = checkpoint.get("norm_stats")
         obs_rms_stats = (
@@ -28,13 +24,7 @@ class Evaluator(BaseEvaluator):
 
         super().__init__(task_id=environment_id, mdp_config=mdp_config, obs_rms_stats=obs_rms_stats)
 
-        if isinstance(policy_state_dict, dict):
-            self.policy = PolicyFactory.build_policy(policy_id, int(self._mdp.obs_dimension),
-                                                     int(self._mdp.action_dimension)).to(self.device)
-            if policy_state_dict:
-                self.policy.load_state_dict(policy_state_dict)
-        elif policy_state_dict is not None:
-            self.policy = policy_state_dict.to(self.device)
+        self.policy = PolicyFactory.load_policy(policy_id, policy_weights_path).to(self.device)
 
     def _run(self):
         last_observation = self._mdp.reset()

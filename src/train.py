@@ -61,13 +61,17 @@ class Trainer(BaseTrainer):
     def _save_policy(self, timestep):
         n_timesteps = self._run_config.algorithm.n_timesteps
         width = len(str(n_timesteps))
-        save_dict = {"policy": self.policy}
+        norm_stats = None
         if (stats := self._mdp.obs_rms_stats) is not None:
-            save_dict["norm_stats"] = {
+            norm_stats = {
                 "obs_mean": torch.tensor(stats[0]),
                 "obs_var": torch.tensor(stats[1]),
             }
-        torch.save(save_dict, f'{self._run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth')
+        self.policy.save(
+            f'{self._run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth',
+            config=self._run_config.policy,
+            norm_stats=norm_stats,
+        )
 
     def run(self):
         last_observation = self._mdp.reset()

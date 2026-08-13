@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from src.algorithms.network_config import NetworkConfig
+import torch
+
+from ml_commons.networks import NetworkConfig
 
 
 @dataclass
@@ -21,3 +23,7 @@ class BetaPolicyConfig(NetworkConfig):
 
 
 PolicyConfig = CategoricalPolicyConfig | GaussianPolicyConfig | BetaPolicyConfig
+
+torch.serialization.add_safe_globals(
+    [CategoricalPolicyConfig, GaussianPolicyConfig, BetaPolicyConfig]
+)

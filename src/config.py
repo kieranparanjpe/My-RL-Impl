@@ -6,8 +6,10 @@ from typing import Any
 from rl_commons.config import RLRunInfo, ConfigLoader
 from rl_commons.mdp import MdpConfig
 
-from src.algorithms.algorithm_config import AlgorithmConfig, PPOHyperparams
-from src.algorithms.network_config import ActivationId, ACTIVATION_MAP, NetworkConfig, ValueFunctionConfig
+from rl_commons.algorithms.algorithm_config import AlgorithmConfig
+from src.algorithms.ppo_config import PPOHyperparams
+from ml_commons.networks import ActivationId, ACTIVATION_MAP, NetworkConfig
+from src.algorithms.value_function_config import ValueFunctionConfig
 from src.algorithms.policies.policy_configs import (
     CategoricalPolicyConfig, GaussianPolicyConfig, BetaPolicyConfig, PolicyConfig,
 )
