@@ -2,7 +2,7 @@
 name = "my-rl-impl"
 version = "0.1.0"
 description = "Reinforcement learning implementations"
-requires-python = ">=3.12"
+requires-python = "==3.12.*"
 dependencies = [
     "rl-commons",
     "gymnasium[box2d,mujoco]==1.3.0",
