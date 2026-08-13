@@ -39,7 +39,10 @@ allow-direct-references = true
 packages = ["src"]
 
 [dependency-groups]
-dev = []
+dev = ["pytest>=8.3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.uv.sources]
 rl-commons = { git = "https://github.com/kieranparanjpe/rl-commons.git" }

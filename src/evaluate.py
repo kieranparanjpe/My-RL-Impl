@@ -2,20 +2,18 @@ import argparse
 
 from rl_commons.execution import BaseEvaluator
 from rl_commons.mdp import MdpTerminationState, MdpConfig
-from rl_commons.policies.policy import Policy
 from src.algorithms.policies import PolicyFactory
 
 
 class Evaluator(BaseEvaluator):
 
     def __init__(self, environment_id, policy_id, policy_weights_path):
-        checkpoint = Policy.load_checkpoint(policy_weights_path)
+        policy, norm_stats = PolicyFactory.load_policy(policy_id, policy_weights_path)
 
-        norm_stats_raw = checkpoint.get("norm_stats")
         obs_rms_stats = (
-            norm_stats_raw["obs_mean"].numpy(),
-            norm_stats_raw["obs_var"].numpy(),
-        ) if norm_stats_raw is not None else None
+            norm_stats["obs_mean"].numpy(),
+            norm_stats["obs_var"].numpy(),
+        ) if norm_stats is not None else None
 
         mdp_config = MdpConfig(
             normalise_obs=(obs_rms_stats is not None),
@@ -24,7 +22,7 @@ class Evaluator(BaseEvaluator):
 
         super().__init__(task_id=environment_id, mdp_config=mdp_config, obs_rms_stats=obs_rms_stats)
 
-        self.policy = PolicyFactory.load_policy(policy_id, policy_weights_path).to(self.device)
+        self.policy = policy.to(self.device)
 
     def _run(self):
         last_observation = self._mdp.reset()
