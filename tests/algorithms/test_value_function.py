@@ -1,7 +1,7 @@
 import torch
 
-from src.algorithms.value_function import ValueFunction
-from src.algorithms.value_function_config import ValueFunctionConfig
+from my_rl_impl.algorithms.value_function import ValueFunction
+from my_rl_impl.algorithms.value_function_config import ValueFunctionConfig
 
 
 def test_forward_shape():

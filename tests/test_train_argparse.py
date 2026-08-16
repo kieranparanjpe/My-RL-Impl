@@ -1,6 +1,6 @@
 import sys
 
-from src.train import parse_args
+from my_rl_impl.train import parse_args
 
 
 def test_parse_args_defaults(monkeypatch):

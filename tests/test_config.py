@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from src.algorithms.ppo_config import PPOHyperparams
-from src.config import RunConfig, load_config, load_grid_configs
+from my_rl_impl.algorithms.ppo_config import PPOHyperparams
+from my_rl_impl.config import RunConfig, load_config, load_grid_configs
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 

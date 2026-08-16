@@ -2,7 +2,7 @@ from typing import override
 
 import torch
 
-from src.algorithms.policies.policy_configs import BetaPolicyConfig
+from my_rl_impl.algorithms.policies.policy_configs import BetaPolicyConfig
 from rl_commons.policies.policy import Policy
 
 

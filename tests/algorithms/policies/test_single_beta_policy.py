@@ -1,7 +1,7 @@
 import torch
 
-from src.algorithms.policies.single_beta_policy import SingleBetaPolicy
-from src.algorithms.policies.policy_configs import BetaPolicyConfig
+from my_rl_impl.algorithms.policies.single_beta_policy import SingleBetaPolicy
+from my_rl_impl.algorithms.policies.policy_configs import BetaPolicyConfig
 
 
 def test_forward_returns_beta_with_valid_concentration():

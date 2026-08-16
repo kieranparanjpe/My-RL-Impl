@@ -1,4 +1,4 @@
-from src.algorithms.policies import (
+from my_rl_impl.algorithms.policies import (
     BetaPolicyConfig, CategoricalPolicy, GaussianPolicyConfig,
     Policy, SingleBetaPolicy, SingleGaussianPolicy,
 )

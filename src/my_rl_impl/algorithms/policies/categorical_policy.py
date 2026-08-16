@@ -1,7 +1,7 @@
 import torch
 from typing_extensions import override
 
-from src.algorithms.policies.policy_configs import CategoricalPolicyConfig
+from my_rl_impl.algorithms.policies.policy_configs import CategoricalPolicyConfig
 from rl_commons.policies.policy import Policy
 
 

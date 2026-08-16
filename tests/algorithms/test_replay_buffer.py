@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from src.algorithms.replay_buffer import ReplayBuffer
+from my_rl_impl.algorithms.replay_buffer import ReplayBuffer
 
 
 def test_append_until_full_then_rejects():

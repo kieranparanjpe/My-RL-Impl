@@ -5,11 +5,11 @@ import torch
 from rl_commons.config.run_info import RLRunInfo
 from rl_commons.mdp.mdp_config import MdpConfig
 from rl_commons.policies.policy import Policy
-from src.algorithms.policies.policy_configs import BetaPolicyConfig, CategoricalPolicyConfig
-from src.algorithms.ppo_config import PPOHyperparams
-from src.algorithms.value_function_config import ValueFunctionConfig
-from src.config import RunConfig
-from src.train import Trainer
+from my_rl_impl.algorithms.policies.policy_configs import BetaPolicyConfig, CategoricalPolicyConfig
+from my_rl_impl.algorithms.ppo_config import PPOHyperparams
+from my_rl_impl.algorithms.value_function_config import ValueFunctionConfig
+from my_rl_impl.config import RunConfig
+from my_rl_impl.train import Trainer
 
 
 def _tiny_discrete_run_config():

@@ -3,11 +3,11 @@ import torch
 
 from rl_commons.log import NullLogger
 from rl_commons.mdp.mdp_termination_state import MdpTerminationState
-from src.algorithms.policies.categorical_policy import CategoricalPolicy
-from src.algorithms.policies.policy_configs import CategoricalPolicyConfig
-from src.algorithms.ppo import PPO
-from src.algorithms.ppo_config import PPOHyperparams
-from src.algorithms.value_function_config import ValueFunctionConfig
+from my_rl_impl.algorithms.policies.categorical_policy import CategoricalPolicy
+from my_rl_impl.algorithms.policies.policy_configs import CategoricalPolicyConfig
+from my_rl_impl.algorithms.ppo import PPO
+from my_rl_impl.algorithms.ppo_config import PPOHyperparams
+from my_rl_impl.algorithms.value_function_config import ValueFunctionConfig
 
 
 def _make_ppo(**hp_overrides):

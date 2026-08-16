@@ -9,9 +9,9 @@ from datetime import datetime
 from rl_commons.config import RLRunInfo
 from rl_commons.execution import gridsearch, BaseTrainer, run_one
 from rl_commons.mdp import MdpTerminationState
-from src.config import RunConfig, load_config, load_grid_configs
-from src.algorithms import PPO
-from src.algorithms.policies import Policy
+from my_rl_impl.config import RunConfig, load_config, load_grid_configs
+from my_rl_impl.algorithms import PPO
+from my_rl_impl.algorithms.policies import Policy
 
 
 class Trainer(BaseTrainer):

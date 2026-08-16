@@ -2,7 +2,7 @@ import argparse
 
 from rl_commons.execution import BaseEvaluator
 from rl_commons.mdp import MdpTerminationState, MdpConfig
-from src.algorithms.policies import Policy
+from my_rl_impl.algorithms.policies import Policy
 
 
 class Evaluator(BaseEvaluator):

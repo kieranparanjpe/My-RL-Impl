@@ -1,7 +1,7 @@
 import torch
 
-from src.algorithms.policies.categorical_policy import CategoricalPolicy
-from src.algorithms.policies.policy_configs import CategoricalPolicyConfig
+from my_rl_impl.algorithms.policies.categorical_policy import CategoricalPolicy
+from my_rl_impl.algorithms.policies.policy_configs import CategoricalPolicyConfig
 
 
 def test_forward_returns_categorical_over_action_dim():

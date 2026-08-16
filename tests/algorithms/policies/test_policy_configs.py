@@ -1,8 +1,8 @@
 from rl_commons.policies.policy import Policy
-from src.algorithms.policies.categorical_policy import CategoricalPolicy
-from src.algorithms.policies.single_beta_policy import SingleBetaPolicy
-from src.algorithms.policies.single_gaussian_policy import SingleGaussianPolicy
-from src.algorithms.policies.policy_configs import BetaPolicyConfig, CategoricalPolicyConfig, GaussianPolicyConfig
+from my_rl_impl.algorithms.policies.categorical_policy import CategoricalPolicy
+from my_rl_impl.algorithms.policies.single_beta_policy import SingleBetaPolicy
+from my_rl_impl.algorithms.policies.single_gaussian_policy import SingleGaussianPolicy
+from my_rl_impl.algorithms.policies.policy_configs import BetaPolicyConfig, CategoricalPolicyConfig, GaussianPolicyConfig
 
 
 def test_categorical_config_survives_weights_only_load(tmp_path):

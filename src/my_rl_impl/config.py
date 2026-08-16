@@ -7,10 +7,10 @@ from rl_commons.config import RLRunInfo, ConfigLoader
 from rl_commons.mdp import MdpConfig
 
 from rl_commons.algorithms.algorithm_config import AlgorithmConfig
-from src.algorithms.ppo_config import PPOHyperparams
+from my_rl_impl.algorithms.ppo_config import PPOHyperparams
 from ml_commons.networks import ActivationId, ACTIVATION_MAP, NetworkConfig
-from src.algorithms.value_function_config import ValueFunctionConfig
-from src.algorithms.policies.policy_configs import (
+from my_rl_impl.algorithms.value_function_config import ValueFunctionConfig
+from my_rl_impl.algorithms.policies.policy_configs import (
     CategoricalPolicyConfig, GaussianPolicyConfig, BetaPolicyConfig, PolicyConfig,
 )
 

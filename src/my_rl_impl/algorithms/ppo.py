@@ -9,8 +9,8 @@ from rl_commons.log import Logger
 from rl_commons.algorithms.algorithm import Algorithm
 from .value_function import ValueFunction
 from rl_commons.policies.policy import Policy
-from src.algorithms.ppo_config import PPOHyperparams
-from src.algorithms.value_function_config import ValueFunctionConfig
+from my_rl_impl.algorithms.ppo_config import PPOHyperparams
+from my_rl_impl.algorithms.value_function_config import ValueFunctionConfig
 from .replay_buffer import ReplayBuffer
 
 class PPO(Algorithm):

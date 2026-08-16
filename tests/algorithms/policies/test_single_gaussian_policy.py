@@ -1,7 +1,7 @@
 import torch
 
-from src.algorithms.policies.single_gaussian_policy import SingleGaussianPolicy
-from src.algorithms.policies.policy_configs import GaussianPolicyConfig
+from my_rl_impl.algorithms.policies.single_gaussian_policy import SingleGaussianPolicy
+from my_rl_impl.algorithms.policies.policy_configs import GaussianPolicyConfig
 
 
 def test_forward_returns_normal_with_positive_std():
