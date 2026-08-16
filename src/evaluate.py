@@ -2,13 +2,13 @@ import argparse
 
 from rl_commons.execution import BaseEvaluator
 from rl_commons.mdp import MdpTerminationState, MdpConfig
-from src.algorithms.policies import PolicyFactory
+from src.algorithms.policies import Policy
 
 
 class Evaluator(BaseEvaluator):
 
     def __init__(self, environment_id, policy_id, policy_weights_path):
-        policy, norm_stats = PolicyFactory.load_policy(policy_id, policy_weights_path)
+        policy, norm_stats = Policy.load(policy_weights_path, policy_id=policy_id)
 
         obs_rms_stats = (
             norm_stats["obs_mean"].numpy(),

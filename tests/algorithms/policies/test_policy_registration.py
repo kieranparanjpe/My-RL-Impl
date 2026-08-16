@@ -1,27 +1,27 @@
 from src.algorithms.policies import (
     BetaPolicyConfig, CategoricalPolicy, GaussianPolicyConfig,
-    PolicyFactory, SingleBetaPolicy, SingleGaussianPolicy,
+    Policy, SingleBetaPolicy, SingleGaussianPolicy,
 )
 
 
 def test_categorical_registered():
-    assert isinstance(PolicyFactory.build_policy("categorical", 4, 2), CategoricalPolicy)
+    assert isinstance(Policy.build_policy("categorical", 4, 2), CategoricalPolicy)
 
 
 def test_single_gaussian_registered():
-    assert isinstance(PolicyFactory.build_policy("single_gaussian", 4, 2), SingleGaussianPolicy)
+    assert isinstance(Policy.build_policy("single_gaussian", 4, 2), SingleGaussianPolicy)
 
 
 def test_single_beta_registered():
-    assert isinstance(PolicyFactory.build_policy("single_beta", 4, 2), SingleBetaPolicy)
+    assert isinstance(Policy.build_policy("single_beta", 4, 2), SingleBetaPolicy)
 
 
 def test_wrong_config_type_falls_back_to_matching_default():
-    policy = PolicyFactory.build_policy("categorical", 4, 2, config=GaussianPolicyConfig())
+    policy = Policy.build_policy("categorical", 4, 2, config=GaussianPolicyConfig())
     assert isinstance(policy, CategoricalPolicy)
 
 
 def test_matching_config_type_is_used_as_is():
     config = BetaPolicyConfig(action_range=(-2.0, 2.0))
-    policy = PolicyFactory.build_policy("single_beta", 4, 2, config=config)
+    policy = Policy.build_policy("single_beta", 4, 2, config=config)
     assert policy.action_shift == -2.0

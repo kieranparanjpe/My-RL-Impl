@@ -3,13 +3,13 @@ from typing_extensions import override
 
 from src.algorithms.policies.policy_configs import CategoricalPolicyConfig
 from rl_commons.policies.policy import Policy
-from rl_commons.policies.policy_factory import PolicyFactory
 
 
 class CategoricalPolicy(Policy):
 
     def __init__(self, input_size : int, number_actions : int, config : CategoricalPolicyConfig = CategoricalPolicyConfig()):
         super().__init__(input_size, number_actions)
+        self.config = config
         self._trunk, trunk_out = config.build_trunk(input_size)
         self._head = torch.nn.Linear(trunk_out, number_actions)
 
@@ -36,4 +36,4 @@ def _build_categorical_policy(obs_dimension: int, action_dimension: int, config)
     return CategoricalPolicy(obs_dimension, action_dimension, cfg)
 
 
-PolicyFactory.register('categorical', _build_categorical_policy)
+Policy.register('categorical', _build_categorical_policy)

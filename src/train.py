@@ -11,7 +11,7 @@ from rl_commons.execution import gridsearch, BaseTrainer, run_one
 from rl_commons.mdp import MdpTerminationState
 from src.config import RunConfig, load_config, load_grid_configs
 from src.algorithms import PPO
-from src.algorithms.policies import PolicyFactory
+from src.algorithms.policies import Policy
 
 
 class Trainer(BaseTrainer):
@@ -38,7 +38,7 @@ class Trainer(BaseTrainer):
         if self._should_save_policy:
             self._create_policy_folder()
 
-        self.policy = PolicyFactory.build_policy(
+        self.policy = Policy.build_policy(
             self._run_info.policy_id,
             self._mdp.obs_dimension,
             self._mdp.action_dimension,
@@ -69,7 +69,6 @@ class Trainer(BaseTrainer):
             }
         self.policy.save(
             f'{self._run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth',
-            config=self._run_config.policy,
             norm_stats=norm_stats,
         )
 

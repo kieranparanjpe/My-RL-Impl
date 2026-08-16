@@ -9,27 +9,27 @@ def test_categorical_config_survives_weights_only_load(tmp_path):
     config = CategoricalPolicyConfig(hidden_sizes=[8])
     policy = CategoricalPolicy(4, 2, config)
     path = tmp_path / "p.pth"
-    policy.save(str(path), config=config)
+    policy.save(str(path))
 
-    checkpoint = Policy.load_checkpoint(str(path))
-    assert checkpoint["config"] == config
+    loaded, _ = Policy.load(str(path), policy_id="categorical")
+    assert loaded.config == config
 
 
 def test_gaussian_config_survives_weights_only_load(tmp_path):
     config = GaussianPolicyConfig(hidden_sizes=[8])
     policy = SingleGaussianPolicy(4, 2, config)
     path = tmp_path / "p.pth"
-    policy.save(str(path), config=config)
+    policy.save(str(path))
 
-    checkpoint = Policy.load_checkpoint(str(path))
-    assert checkpoint["config"] == config
+    loaded, _ = Policy.load(str(path), policy_id="single_gaussian")
+    assert loaded.config == config
 
 
 def test_beta_config_survives_weights_only_load(tmp_path):
     config = BetaPolicyConfig(hidden_sizes=[8], action_range=(-2.0, 2.0))
     policy = SingleBetaPolicy(4, 2, config)
     path = tmp_path / "p.pth"
-    policy.save(str(path), config=config)
+    policy.save(str(path))
 
-    checkpoint = Policy.load_checkpoint(str(path))
-    assert checkpoint["config"] == config
+    loaded, _ = Policy.load(str(path), policy_id="single_beta")
+    assert loaded.config == config

@@ -2,13 +2,13 @@ import torch
 
 from src.algorithms.policies.policy_configs import GaussianPolicyConfig
 from rl_commons.policies.policy import Policy
-from rl_commons.policies.policy_factory import PolicyFactory
 
 
 class SingleGaussianPolicy(Policy):
 
     def __init__(self, input_size : int, number_actions : int, config : GaussianPolicyConfig = GaussianPolicyConfig()):
         super().__init__(input_size, number_actions)
+        self.config = config
         self._trunk, trunk_out = config.build_trunk(input_size)
         self._head = torch.nn.Linear(trunk_out, number_actions * 2)
 
@@ -33,4 +33,4 @@ def _build_single_gaussian_policy(obs_dimension: int, action_dimension: int, con
     return SingleGaussianPolicy(obs_dimension, action_dimension, cfg)
 
 
-PolicyFactory.register('single_gaussian', _build_single_gaussian_policy)
+Policy.register('single_gaussian', _build_single_gaussian_policy)
