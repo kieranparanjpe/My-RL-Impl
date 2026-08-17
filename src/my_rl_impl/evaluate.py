@@ -8,14 +8,14 @@ from my_rl_impl.algorithms.policies import Policy
 class Evaluator(BaseEvaluator):
 
     def __init__(self, environment_id, policy_id, policy_weights_path):
-        policy, norm_stats = Policy.load(policy_weights_path, policy_id=policy_id)
+        super().__init__(task_id=environment_id, mdp_config=MdpConfig(normalise_obs=False, normalise_reward=False))
 
-        mdp_config = MdpConfig(
-            normalise_obs=(norm_stats is not None),
-            normalise_reward=False,
-        )
+        policy, norm_stats = Policy.load(policy_weights_path, policy_id=policy_id,
+                                         obs_dimension=self._mdp.obs_dimension,
+                                         action_dimension=self._mdp.action_dimension)
 
-        super().__init__(task_id=environment_id, mdp_config=mdp_config, obs_rms_stats=norm_stats)
+        if norm_stats is not None:
+            self._mdp.enable_obs_normalization(norm_stats)
 
         self.policy = policy.to(self.device)
 
