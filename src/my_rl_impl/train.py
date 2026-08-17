@@ -62,9 +62,9 @@ class Trainer(BaseTrainer):
     def _save_policy(self, timestep):
         n_timesteps = self._run_config.algorithm.n_timesteps
         width = len(str(n_timesteps))
+        self.policy.obs_norm_stats = self._mdp.obs_rms_stats
         self.policy.save(
             f'{self._run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth',
-            norm_stats=self._mdp.obs_rms_stats,
         )
 
     def run(self):

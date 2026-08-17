@@ -11,7 +11,7 @@ def test_categorical_config_survives_weights_only_load(tmp_path):
     path = tmp_path / "p.pth"
     policy.save(str(path))
 
-    loaded, _ = Policy.load(str(path), policy_id="categorical")
+    loaded = Policy.load(str(path), policy_id="categorical")
     assert loaded.config == config
 
 
@@ -21,7 +21,7 @@ def test_gaussian_config_survives_weights_only_load(tmp_path):
     path = tmp_path / "p.pth"
     policy.save(str(path))
 
-    loaded, _ = Policy.load(str(path), policy_id="single_gaussian")
+    loaded = Policy.load(str(path), policy_id="single_gaussian")
     assert loaded.config == config
 
 
@@ -31,5 +31,5 @@ def test_beta_config_survives_weights_only_load(tmp_path):
     path = tmp_path / "p.pth"
     policy.save(str(path))
 
-    loaded, _ = Policy.load(str(path), policy_id="single_beta")
+    loaded = Policy.load(str(path), policy_id="single_beta")
     assert loaded.config == config

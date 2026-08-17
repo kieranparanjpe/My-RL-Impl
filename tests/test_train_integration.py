@@ -70,7 +70,7 @@ def test_trainer_saves_and_reloads_policy_checkpoint(tmp_path, monkeypatch):
     checkpoints = list((tmp_path / "saved_policies" / "CartPole-v1").rglob("*.pth"))
     assert len(checkpoints) >= 1
 
-    loaded, norm_stats = Policy.load(str(checkpoints[-1]), policy_id="categorical")
-    assert norm_stats is None
+    loaded = Policy.load(str(checkpoints[-1]), policy_id="categorical")
+    assert loaded.obs_norm_stats is None
     assert loaded.input_size == 4
     assert loaded._number_actions == 2
