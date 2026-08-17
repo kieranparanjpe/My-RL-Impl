@@ -2,7 +2,6 @@ import argparse
 import functools
 import os
 
-import torch
 from tqdm.auto import tqdm
 from datetime import datetime
 
@@ -34,6 +33,8 @@ class Trainer(BaseTrainer):
             total_timesteps=run_config.algorithm.n_timesteps,
         )
 
+        self._run_info: RLRunInfo
+
         self._should_save_policy = save_policy
         if self._should_save_policy:
             self._create_policy_folder()
@@ -61,15 +62,9 @@ class Trainer(BaseTrainer):
     def _save_policy(self, timestep):
         n_timesteps = self._run_config.algorithm.n_timesteps
         width = len(str(n_timesteps))
-        norm_stats = None
-        if (stats := self._mdp.obs_rms_stats) is not None:
-            norm_stats = {
-                "obs_mean": torch.tensor(stats[0]),
-                "obs_var": torch.tensor(stats[1]),
-            }
         self.policy.save(
             f'{self._run_info.local_folder_path("saved_policies")}/policy_{timestep:0{width}d}.pth',
-            norm_stats=norm_stats,
+            norm_stats=self._mdp.obs_rms_stats,
         )
 
     def run(self):
