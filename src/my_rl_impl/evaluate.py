@@ -1,4 +1,5 @@
 import argparse
+from dataclasses import replace
 
 from rl_commons.execution import BaseEvaluator
 from rl_commons.mdp import MdpTerminationState, MdpConfig
@@ -7,8 +8,12 @@ from my_rl_impl.algorithms.policies import Policy
 
 class Evaluator(BaseEvaluator):
 
-    def __init__(self, environment_id, policy_id, policy_weights_path):
-        super().__init__(task_id=environment_id, mdp_config=MdpConfig(normalise_obs=False, normalise_reward=False))
+    def __init__(self, environment_id, policy_id, policy_weights_path, mdp_config: MdpConfig = MdpConfig()):
+        # obs normalization isn't known until after the policy checkpoint is loaded (see below),
+        # so force it off here regardless of what the caller passed, while keeping everything else
+        # (e.g. make_kwargs) from the caller's mdp_config intact.
+        super().__init__(task_id=environment_id,
+                         mdp_config=replace(mdp_config, normalise_obs=False, normalise_reward=False))
 
         policy = Policy.load(policy_weights_path, policy_id=policy_id,
                              obs_dimension=self._mdp.obs_dimension,
