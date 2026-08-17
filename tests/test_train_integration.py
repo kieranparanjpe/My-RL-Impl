@@ -71,6 +71,7 @@ def test_trainer_saves_and_reloads_policy_checkpoint(tmp_path, monkeypatch):
     assert len(checkpoints) >= 1
 
     loaded = Policy.load(str(checkpoints[-1]), policy_id="categorical")
-    assert loaded.obs_norm_stats is None
+    assert loaded.obs_norm_stats.mean == 0.0
+    assert loaded.obs_norm_stats.var == 1.0
     assert loaded.input_size == 4
     assert loaded._number_actions == 2

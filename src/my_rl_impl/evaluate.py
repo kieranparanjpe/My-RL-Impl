@@ -14,8 +14,7 @@ class Evaluator(BaseEvaluator):
                              obs_dimension=self._mdp.obs_dimension,
                              action_dimension=self._mdp.action_dimension)
 
-        if policy.obs_norm_stats is not None:
-            self._mdp.enable_obs_normalization(policy.obs_norm_stats)
+        self._mdp.enable_obs_normalization(policy.obs_norm_stats)
 
         self.policy = policy.to(self.device)
 
