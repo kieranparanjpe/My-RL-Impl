@@ -71,7 +71,7 @@ There are two files to run: `train.py` and `evaluate.py`.
 
 #### Training
 ```
-uv run python -m src.train \
+uv run python -m my_rl_impl.train \
     --environment "<gymnasium environment id>" \
     --policy "[categorical, single_beta, single_gaussian]" \
     --algorithm "ppo" \
@@ -129,7 +129,7 @@ wandb login
 #### Evaluating
 This will display a trained policy visually. 
 ```
-uv run python -m src.evaluate \
+uv run python -m my_rl_impl.evaluate \
     --environment "<gymnasium environment id>" \
     --policy "[categorical, single_beta, single_gaussian]" \
     --weights "path/to/saved/weights.pth"
